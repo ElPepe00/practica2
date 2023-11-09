@@ -21,6 +21,9 @@
 #define GRAY "\x1B[90m"
 #define BOLD "\e[1m"
 
+//Declaracion constante del prompt
+char const PROMPT = '$ ';
+
 //Declaración de los métodos
 char *read_line(char *line);
 int imprimir_prompt();
