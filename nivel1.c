@@ -29,7 +29,7 @@ int internal_bg(char **args){
 /* --- --- --- ---*/
 
 int check_internal(char **args) {
-    if (args[0] == NULL) {
+    if (args[0] == NULL) { //primer token null si 0 tokens
         return 0; // No hay comando
     } else if(strcmp(args[0], "exit") == 0) {
         printf("\rEXIT.\n");
@@ -71,7 +71,7 @@ char *read_line(char *line) {
     imprimir_prompt();
     // Lee la línea y comprueba si no es nula
     if (fgets(line, COMMAND_LINE_SIZE, stdin) != NULL) {
-        // Sustituye el carácter final de new line por '\0'
+        // Sustituir new line del final por '\0'
         size_t length = strlen(line);
         if (line[length - 1] == '\n') {
             line[length - 1] = '\0';
@@ -84,6 +84,12 @@ char *read_line(char *line) {
     } else { //línea nula
         return NULL;
     }
+
+    // Forzar el vaciado del buffer de salida
+    fflush(stdout);
+
+    // Esperar 0.5 segundos
+    sleep(0.5);
 }
 
 
@@ -94,12 +100,6 @@ int imprimir_prompt() {
     printf(NEGRITA AZUL_T "~%s", getenv("PWD"));
     printf(RESET "%c ", PROMPT); //printf("$ ")
     return 0;
-
-    // Forzar el vaciado del buffer de salida
-    fflush(stdout);
-
-    // Esperar 0.5 segundos
-    sleep(0.5);
 }
 
 int parse_args(char **args, char *line){
@@ -127,7 +127,7 @@ int parse_args(char **args, char *line){
 
     args[i] = NULL; // Último elemento debe ser NULL
 
-    // [PRUEBA, QUITAR LUEGO]: imprimir los tokens obtenidos
+    // [PRUEBA, QUITAR EN NIVELES POSTERIORES]: imprimir los tokens obtenidos
     for (int j = 0; args[j] != NULL; j++) {
         printf("args[%d]: %s\n", j, args[j]);
     }
