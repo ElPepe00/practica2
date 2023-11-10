@@ -14,12 +14,18 @@
 #define ARGS_SIZE 64
 
 //Colores y estilos
-#define RED "\x1B[31m"
-#define BLUE "\x1B[34m"
-#define WHITE "\x1B[37m"
-#define RESET "\x1B[0m"
-#define GRAY "\x1B[90m"
-#define BOLD "\e[1m"
+#define RESET "\033[0m"
+#define NEGRO_T "\x1b[30m"
+#define NEGRO_F "\x1b[40m"
+#define GRIS_T "\x1b[94m"
+#define ROJO_T "\x1b[31m"
+#define VERDE_T "\x1b[32m"
+#define AMARILLO_T "\x1b[33m"
+#define AZUL_T "\x1b[34m"
+#define MAGENTA_T "\x1b[35m"
+#define CYAN_T "\x1b[36m"
+#define BLANCO_T "\x1b[97m"
+#define NEGRITA "\x1b[1m"
 
 //Declaración de los métodos
 char *read_line(char *line);
@@ -31,3 +37,6 @@ int internal_cd(char **args);
 int internal_export(char **args);
 int internal_source(char **args);
 int internal_jobs(char **args);
+
+//Declaracion constante del prompt
+char const PROMPT = '$';
