@@ -3,27 +3,33 @@
 
 /* --- COMANDOS INTERNOS --- */
 int internal_cd(char **args){
-    puts("cd aún no hace nada\n"); // TO-DO
+    printf("cd aún no hace nada\n"); // TO-DO
+    return 0;
 }
 
 int internal_export(char **args){
-    puts("export aún no hace nada\n"); // TO-DO
+    printf("export aún no hace nada\n"); // TO-DO
+    return 0;
 }
 
 int internal_source(char **args){
-    puts("source aún no hace nada\n"); // TO-DO
+    printf("source aún no hace nada\n"); // TO-DO
+    return 0;
 }
 
 int internal_jobs(char **args){
-    puts("jobs aún no hace nada\n"); // TO-DO
+    printf("jobs aún no hace nada\n"); // TO-DO
+    return 0;
 }
 
 int internal_fg(char **args){
-    puts("fg aún no hace nada\n"); // TO-DO
+    printf("fg aún no hace nada\n"); // TO-DO
+    return 0;
 }
 
 int internal_bg(char **args){
-    puts("bg aún no hace nada\n"); // TO-DO
+    printf("bg aún no hace nada\n"); // TO-DO
+    return 0;
 }
 
 /* --- --- --- ---*/
@@ -149,4 +155,66 @@ int execute_line(char *line) {
         free(args[i]);
     }
 }
+int check_internal(char **args){
+    if (args[0] == NULL) {
+        // No hay comando para verificar
+        return 0; // FALSE
+    }
 
+        // Comparar con comandos internos y llamar a las funciones correspondientes
+    if (strcmp(args[0], "cd") == 0) {
+        return internal_cd(args[1]);
+    } else if (strcmp(args[0], "export") == 0) {
+        return internal_export(args);
+    } else if (strcmp(args[0], "source") == 0) {
+        return internal_source(args);
+    } else if (strcmp(args[0], "jobs") == 0) {
+        return internal_jobs(args);
+    } else if (strcmp(args[0], "fg") == 0) {
+        return internal_fg(args);
+    } else if (strcmp(args[0], "bg") == 0) {
+        return internal_bg(args);
+    } else if (strcmp(args[0], "exit") == 0) {
+        printf("EXIT\n");
+        exit(0); // Llamada a la función exit
+    }
+
+    return 0; // FALSE para comandos no reconocidos
+}
+// Implementación de las funciones internas
+int internal_cd(char *path) {
+    // Implementar lógica para cambiar de directorio
+    // Devolver 1 para indicar que se ejecutó un comando interno
+    printf(GRIS_T "[internal_cd()→Esta función cambiará de directorio]\n");
+    return 1; // TRUE
+}
+
+int internal_export(char *variable) {
+    // Implementar lógica para exportar una variable
+    printf(GRIS_T "[internal_export()→Esta función asignará valores a variablescd de entorno]\n");
+    return 1; // TRUE
+}
+
+int internal_source(char *filename) {
+    // Implementar lógica para ejecutar un script desde un archivo
+    printf(GRIS_T "[internal_source()→Esta función ejecutará un fichero de líneas de comandos]\n");
+    return 1; // TRUE
+}
+
+int internal_jobs() {
+    // Implementar lógica para mostrar trabajos en segundo plano
+    printf(GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n");
+    return 1; // TRUE
+}
+
+int internal_fg() {
+    // Implementar lógica para llevar un trabajo a primer plano
+    printf(GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n");
+    return 1; // TRUE
+}
+
+int internal_bg() {
+    // Implementar lógica para llevar un trabajo a segundo plano
+    printf(GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n");
+    return 1; // TRUE
+}
