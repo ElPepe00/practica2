@@ -182,38 +182,38 @@ int check_internal(char **args){
     return 0; // FALSE para comandos no reconocidos
 }
 // Implementación de las funciones internas
-int internal_cd(char *path) {
+int internal_cd(char **args) {
     // Implementar lógica para cambiar de directorio
     // Devolver 1 para indicar que se ejecutó un comando interno
     printf(GRIS_T "[internal_cd()→Esta función cambiará de directorio]\n");
     return 1; // TRUE
 }
 
-int internal_export(char *variable) {
+int internal_export(char **args) {
     // Implementar lógica para exportar una variable
     printf(GRIS_T "[internal_export()→Esta función asignará valores a variablescd de entorno]\n");
     return 1; // TRUE
 }
 
-int internal_source(char *filename) {
+int internal_source(char **args) {
     // Implementar lógica para ejecutar un script desde un archivo
     printf(GRIS_T "[internal_source()→Esta función ejecutará un fichero de líneas de comandos]\n");
     return 1; // TRUE
 }
 
-int internal_jobs() {
+int internal_jobs(char **args) {
     // Implementar lógica para mostrar trabajos en segundo plano
     printf(GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n");
     return 1; // TRUE
 }
 
-int internal_fg() {
+int internal_fg(char **args) {
     // Implementar lógica para llevar un trabajo a primer plano
     printf(GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n");
     return 1; // TRUE
 }
 
-int internal_bg() {
+int internal_bg(char **args) {
     // Implementar lógica para llevar un trabajo a segundo plano
     printf(GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n");
     return 1; // TRUE
