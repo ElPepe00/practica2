@@ -53,9 +53,14 @@ int parse_args(char **args, char *line){
 
     token = strtok(line, " ");
     while (token != NULL) {
-        if (i >= ARGS_SIZE || token[0] == '#') {
+        if (i >= ARGS_SIZE) {
             // Esto se ejeucta si: comentario o núm max de argumentos
-            args[i] = NULL; 
+            args[i] = NULL;
+            break;
+        }
+
+        if (token[0] == "#") {
+            args[i] = NULL;
             break;
         }
 
@@ -73,9 +78,13 @@ int parse_args(char **args, char *line){
     args[i] = NULL; // Último elemento debe ser NULL
 
     // [PRUEBA, QUITAR EN NIVELES POSTERIORES]: imprimir los tokens obtenidos
-    for (int j = 0; args[j] != NULL; j++) {
-        printf("args[%d]: %s\n", j, args[j]);
+    int j;
+    for (j = 0; j < i; j++) {
+        printf(GRIS_T "[parse_args()-> token %d: %s]\n", j, args[j]);
     }
+
+    
+    
 
     //Devolvemos núm de tokens !NULL (el contador i)
     return i;
@@ -103,7 +112,7 @@ int check_internal(char **args){
 
     // Comparar con comandos internos y llamar a las funciones correspondientes
     if (strcmp(args[0], "cd") == 0) {
-        return internal_cd(args[1]);
+        return internal_cd(args);
     } else if (strcmp(args[0], "export") == 0) {
         return internal_export(args);
     } else if (strcmp(args[0], "source") == 0) {
