@@ -1,4 +1,4 @@
-/* NIVEL 2 HEADER */
+/* NIVEL 3 HEADER */
 
 #define _POSIX_C_SOURCE 200112L
 
@@ -8,10 +8,13 @@
 #include <unistd.h>
 #include <string.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 //Tamaño línea de comandos y número máximo de argumentos
 #define COMMAND_LINE_SIZE 1024
 #define ARGS_SIZE 64
+#define N_JOBS 64
 
 //Colores y estilos
 #define RESET "\033[0m"
@@ -40,3 +43,10 @@ int internal_jobs(char **args);
 
 //Declaracion constante del prompt
 char const PROMPT = '$';
+
+//Declaracion de la estructura de info_job
+struct info_job {
+   pid_t pid;
+   char estado;
+   char cmd[COMMAND_LINE_SIZE];
+};

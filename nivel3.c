@@ -1,9 +1,15 @@
-/* NIVEL 2 */
-#include "nivel2.h"
-/* RESUMEN TO-DO 14/11/2023
-    cd avanzado en internal_cd()
+/* NIVEL 3 */
+#include "nivel3.h"
+/* RESUMEN TO-DO 23/11/2023
+    Revisar execute_line()
+    Revisar internal_source()
 
 */
+
+//Declaramos array de trabajos
+static struct info_job jobs_list[N_JOBS];
+//Variable que almacena el nombre del minishell
+static char mi_shell[COMMAND_LINE_SIZE];
 
 /* --- COMANDOS INTERNOS --- */
 int internal_cd(char **args) {
@@ -53,10 +59,6 @@ int internal_export(char **args) {
         printf(ROJO_T "No has puesto ningún argumento. Uso correcto: export NOMBRE=VALOR\n");
         return 0;
     }
-    //**** PREGUNTA: Se debería comprobar si hay más de 1 argumento ?? 
-    // (p ej: "export VAR1=VAL1 VAR2=VAL2 VAR3=VAL3"...) 
-    // Y en ese caso dar error ?
-    //**** CREO QUE NO ES NECESARIO CONTROLAR MAS DE 1 ARGUMENTO
 
     // Separar NOMBRE y VALOR
     char *nombre = strtok(args[1], "=");
@@ -103,9 +105,34 @@ int internal_export(char **args) {
     return 1;
 }
 
+
 int internal_source(char **args) {
-    // Implementar lógica para ejecutar un script desde un archivo
-    printf(GRIS_T "[internal_source()→Esta función ejecutará un fichero de líneas de comandos]\n");
+
+    char *linea = (char *) malloc(sizeof(char) * COMMAND_LINE_SIZE);
+
+    if (linea) {
+        FILE *fichero = fopen(args[1], "r"); //Abrimos el fichero
+
+        if (fichero) {
+
+            //Leemos linea a linea en el fichero
+            while (fgets(linea, COMMAND_LINE_SIZE, fichero)) {
+                execute_line(linea);//Pasamos la linea al execute line
+                fflush(fichero); //Limpiamos el buffer
+            }
+
+            fclose(fichero); //Cerramos fichero
+            free(linea);
+            return EXIT_SUCCESS;
+
+        } else {
+
+            perror("Error");
+            free(linea);
+        }
+    }
+
+    return EXIT_FAILURE;
     return 1; // TRUE
 }
 
@@ -158,8 +185,16 @@ int check_internal(char **args) {
 }
 
 //Método main
-int main() {
+int main(char *argv) {
+
     char line[COMMAND_LINE_SIZE];
+
+    //Inicializamos los datos del job_list
+    jobs_list[0].pid = 0;
+    jobs_list[0].estado = 'N';
+    memset(jobs_list[0].cmd, '\0', COMMAND_LINE_SIZE);
+    strcpy(mi_shell, argv[0]);
+    
     while (read_line(line)) {
         execute_line(line);
     }
@@ -237,16 +272,58 @@ int parse_args(char **args, char *line){
     return i;
 }
 
+
 int execute_line(char *line) {
     char *args[ARGS_SIZE];
     parse_args(args, line);
 
-    if (strtok(line, " \t\r\n") > 0) {
-        check_internal(args);
+    if (args[0]) {
+        if (!check_internal(args)) {
+            int estado;
+            pid_t pid = fork();
+
+            //Hijo
+            if (pid == 0) {
+                printf(GRIS_T "[execute_line() → PID padre: %d(%s)]\n", getppid(), jobs_list[0].cmd);
+                printf(GRIS_T "[execute_line() → PID hijo: %d]\n", getpid());
+
+                if (execvp(args[0], args)) {
+                    printf(ROJO_T "Error al leer el comando externo: %s. \n", args[0]);
+                    exit(EXIT_FAILURE); //Terminacion anormal
+                }
+
+                exit(EXIT_SUCCESS); //Terminacion correcta
+
+            //Padre
+            } else if (pid > 0) {
+                pid = wait(&estado);
+
+                //EL hijo termina de manera normal
+                if(WIFEXITED(estado)) {
+                    printf(GRIS_T "[El proceso hijo %d ha finalizado con exit(), estado: %d]\n", pid, WEXITSTATUS(estado));
+                    //Reseteamos los datos
+                    jobs_list[0].pid = 0;
+                    jobs_list[0].estado = 'N';
+                    memset(jobs_list[0].cmd, '\0', COMMAND_LINE_SIZE);
+                }
+
+                if(WIFSIGNALED(estado)) {
+                    printf(GRIS_T "[El proceso hijo %d ha finalizado por señal, estado: %d]\n", pid, WTERMSIG(estado));
+                    //Reseteamos los datos
+                    jobs_list[0].pid = 0;
+                    jobs_list[0].estado = 'N';
+                    memset(jobs_list[0].cmd, '\0', COMMAND_LINE_SIZE);
+                }
+
+            //Error de fork
+            } else {
+                perror("Error de fork");
+                exit(EXIT_FAILURE);
+            }
+        }
     }
 
-    //Liberar memoria asignada por parse_args()
-    for (int i = 0; args[i] != NULL; ++i) {
-        free(args[i]);
-    }
-}
+    free(args);
+    return EXIT_SUCCESS;
+
+} 
