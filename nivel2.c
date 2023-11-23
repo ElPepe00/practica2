@@ -3,13 +3,12 @@
 /* RESUMEN TO-DO 14/11/2023
     cd avanzado en internal_cd()
     actualizar prompt al haber hecho internal_cd()
-    
-    comprobar argumento (que no sea vacío tipo "export =" o "export =abcd" etc) en internal_export()
 
 */
 
 /* --- COMANDOS INTERNOS --- */
 int internal_cd(char **args) {
+
     if (args[1] == NULL) {
         // no hay argumento -> ir a HOME
         chdir(getenv("HOME"));
@@ -21,18 +20,30 @@ int internal_cd(char **args) {
     } else {
         // ª
         // TO-DO: cd avanzado
-        printf("TO-DO: Más de 1 argumento en cd (cd avanzado)");
     }
 
     // <<En este nivel, a modo de test, muestra por pantalla el directorio al que nos hemos trasladado.>>
-    char cwd[COMMAND_LINE_SIZE];
-    if (getcwd(cwd, sizeof(cwd)) != NULL) {
-        printf("Directorio actual: %s\n", cwd);
+    char *cwd;
+    if (cwd = malloc((sizeof(char)* COMMAND_LINE_SIZE))) {
+        getcwd(cwd, COMMAND_LINE_SIZE);
+        printf("[internal_cd()→ %s]\n", cwd);
     } else {
         perror("getcwd");
     }
 
+    free(cwd);
+
+    //ANTES
+    //if (getcwd(cwd, sizeof(cwd)) != NULL) {
+    //    printf("Directorio actual: %s\n", cwd);
+    //} else {
+    //    perror("getcwd");
+    //}
+
+    
+
     //TO-DO: actualizar prompt al cambiar de directorio
+
 
     return 1;
 }
@@ -40,20 +51,28 @@ int internal_cd(char **args) {
 int internal_export(char **args) {
     // Antes de nada: Comprobar si hay argumento siquiera
     if (args[1] == NULL) {
-        printf("No has puesto ningún argumento. Uso correcto: export NOMBRE=VALOR\n");
+        printf(ROJO_T "No has puesto ningún argumento. Uso correcto: export NOMBRE=VALOR\n");
         return 0;
     }
     //**** PREGUNTA: Se debería comprobar si hay más de 1 argumento ?? 
     // (p ej: "export VAR1=VAL1 VAR2=VAL2 VAR3=VAL3"...) 
     // Y en ese caso dar error ?
-
-    // TO-DO: comprobar que el argumento no esté 'vacío' (p ej "export =" da error)
+    //**** CREO QUE NO ES NECESARIO CONTROLAR MAS DE 1 ARGUMENTO
 
     // Separar NOMBRE y VALOR
     char *nombre = strtok(args[1], "=");
     size_t nombre_length = strlen(nombre);
-    char *valor = (char *)malloc(strlen(args[1]) - nombre_length);;
-    strcpy(valor, args[1] + nombre_length + 1);
+    char *valor = (char *)malloc(strlen(args[1]) - nombre_length);
+
+    // Comprobar que el argumento no esté 'vacío' (p ej "export =" da error)
+    if (valor == NULL) {
+        printf(ROJO_T "El argumento del valor esta vacio");
+        return 0;
+
+    } else {
+        strcpy(valor, args[1] + nombre_length + 1);
+    }
+   
 
     //TEMPORALMENTE imprimir tokens obtenidos
     printf("PARÁMETRO NOMBRE: %s\n",nombre);
@@ -85,20 +104,28 @@ int internal_export(char **args) {
     return 1;
 }
 
-int internal_source(char **args){
-    puts("source aún no hace nada\n"); // TO-DO
+int internal_source(char **args) {
+    // Implementar lógica para ejecutar un script desde un archivo
+    printf(GRIS_T "[internal_source()→Esta función ejecutará un fichero de líneas de comandos]\n");
+    return 1; // TRUE
 }
 
-int internal_jobs(char **args){
-    puts("jobs aún no hace nada\n"); // TO-DO
+int internal_jobs(char **args) {
+    // Implementar lógica para mostrar trabajos en segundo plano
+    printf(GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n");
+    return 1; // TRUE
 }
 
-int internal_fg(char **args){
-    puts("fg aún no hace nada\n"); // TO-DO
+int internal_fg(char **args) {
+    // Implementar lógica para llevar un trabajo a primer plano
+    printf(GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n");
+    return 1; // TRUE
 }
 
-int internal_bg(char **args){
-    puts("bg aún no hace nada\n"); // TO-DO
+int internal_bg(char **args) {
+    // Implementar lógica para llevar un trabajo a segundo plano
+    printf(GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n");
+    return 1; // TRUE
 }
 
 /* --- --- --- ---*/
