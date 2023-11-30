@@ -6,42 +6,83 @@
 
 /* --- COMANDOS INTERNOS --- */
 int internal_cd(char **args)
-{
-
-    if (args[1] == NULL)
+{ // falta control de error
+    char *linea = malloc(sizeof(char) * COMMAND_LINE_SIZE);
+    if (linea == NULL)
     {
-        // no hay argumento -> ir a HOME
-        chdir(getenv("HOME"));
+        fprintf(stderr, "No hay memoria dinámica disponible en este momento.\n");
     }
-    else if (args[2] == NULL)
+
+    //Concatenamos los args
+    for (int i = 0; args[i]; i++)
     {
-        // Hay argumento -> chdir a lo que diga el argumento
-        if (chdir(args[1]) != 0)
+        strcat(linea, " ");
+        strcat(linea, args[i]);
+    }
+
+    // Separadores en ASCII: barra,comillas,comilla, espacio
+    const int sep[] = {92, 34, 39, 32};
+
+    if (args[2] != NULL)
+    {
+        //Miramos si es un caso escepcional
+        int numeroLetrasArgs1 = strlen(args[1]);
+        int permitido = 1;
+
+        char *ruta;
+        //comilla
+        if (args[1][0] == (char)sep[1])
         {
-            perror("cd");
+            ruta = strchr(linea, (char)(sep[1]));
+            borradorCaracter(ruta, (char)sep[1]);
+        }
+        //comillas
+        else if (args[1][0] == (char)sep[2])
+        {
+            ruta = strchr(linea, (char)(sep[2]));
+            borradorCaracter(ruta, (char)sep[2]);
+        }
+        //barra
+        else if (args[1][numeroLetrasArgs1 - 1] == (char)sep[0])
+        {
+            ruta = strchr(linea, args[1][0]);
+            borradorCaracter(ruta, (char)sep[0]);
+        }
+        else
+        {
+            permitido = 0;
+        }
+
+        //Si se permiten 2 palabras después del cd
+        if (!permitido)
+        {
+            fprintf(stderr, "Error: Too much arguments\n");
+        }
+        else
+        {
+            fprintf(stderr, "ruta: %s\n",ruta);
+            if (chdir(ruta))
+            {
+                perror("Error");
+            }
         }
     }
+    //Si es una palabra
     else
     {
-        // cd avanzado
-        char path[COMMAND_LINE_SIZE];
-        strcpy(path, args[1]);
-        for (int i = 2; args[i] != NULL; ++i)
+        if (args[1] == NULL)
         {
-            strcat(path, " ");
-            strcat(path, args[i]);
+            if (chdir(getenv("HOME")))
+            {
+                perror("Error");
+            }
         }
-
-        int len = strlen(path);
-        if (len >= 2 && (path[0] == '\'' || path[0] == '\"') && path[0] == path[len - 1])
+        else
         {
-            memmove(path, path + 1, len - 2);
-            path[len - 2] = '\0';
-        }
-
-        if (chdir(path) != 0)
-        {
-            perror("cd");
+            if (chdir(args[1]))
+            {
+                perror("Error");
+            }
         }
     }
 
@@ -61,6 +102,25 @@ int internal_cd(char **args)
     // TO-DO: actualizar prompt al cambiar de directorio
 
     return 1;
+}
+/**
+ * Método que borra un caracter de un "array/puntero"
+ **/
+void borradorCaracter(char *args, char caracter)
+{
+    int indice = 0;
+    int indiceNuevo = 0;
+
+    while (args[indice])
+    {
+        if (args[indice] != caracter)
+        {
+            args[indiceNuevo] = args[indice];
+            indiceNuevo++;
+        }
+        indice++;
+    }
+    args[indiceNuevo] = 0;
 }
 
 int internal_export(char **args)
