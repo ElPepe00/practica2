@@ -1,126 +1,95 @@
 /* NIVEL 2 */
 #include "nivel2.h"
-/* RESUMEN TO-DO 14/11/2023
-
-*/
 
 /* --- COMANDOS INTERNOS --- */
-int internal_cd(char **args)
-{ // falta control de error
+int internal_cd(char **args) {
+
     char *linea = malloc(sizeof(char) * COMMAND_LINE_SIZE);
-    if (linea == NULL)
-    {
+
+    if (linea == NULL) {
         fprintf(stderr, "No hay memoria dinámica disponible en este momento.\n");
     }
 
     //Concatenamos los args
-    for (int i = 0; args[i]; i++)
-    {
+    for (int i = 0; args[i]; i++) {
         strcat(linea, " ");
         strcat(linea, args[i]);
     }
 
-    // Separadores en ASCII: barra,comillas,comilla, espacio
+    // Separadores: barra,comillas,comilla simple, espacio
     const int sep[] = {92, 34, 39, 32};
 
-    if (args[2] != NULL)
-    {
-        //Miramos si es un caso escepcional
-        int numeroLetrasArgs1 = strlen(args[1]);
-        int permitido = 1;
-
+    if (args[2] != NULL) {
+        //Miramos si es un caso especial
+        int nLetsArgs1 = strlen(args[1]);
+        int permiso = 1;
         char *ruta;
-        //comilla
-        if (args[1][0] == (char)sep[1])
-        {
+        
+        //Si es comilla simple
+        if (args[1][0] == (char)sep[1]) {
             ruta = strchr(linea, (char)(sep[1]));
             borradorCaracter(ruta, (char)sep[1]);
         }
-        //comillas
-        else if (args[1][0] == (char)sep[2])
-        {
+
+        //Si son comillas
+        else if (args[1][0] == (char)sep[2]) {
             ruta = strchr(linea, (char)(sep[2]));
             borradorCaracter(ruta, (char)sep[2]);
         }
-        //barra
-        else if (args[1][numeroLetrasArgs1 - 1] == (char)sep[0])
-        {
+
+        //Si es la barra
+        else if (args[1][nLetsArgs1 - 1] == (char)sep[0]) {
             ruta = strchr(linea, args[1][0]);
             borradorCaracter(ruta, (char)sep[0]);
         }
-        else
-        {
-            permitido = 0;
+        else {
+            permiso = 0;
         }
 
         //Si se permiten 2 palabras después del cd
-        if (!permitido)
-        {
-            fprintf(stderr, "Error: Too much arguments\n");
-        }
-        else
-        {
+        if (!permiso) {
+            fprintf(stderr, "Error: Demasiados Argumentos\n");
+
+        } else {
             fprintf(stderr, "ruta: %s\n",ruta);
-            if (chdir(ruta))
-            {
+
+            if (chdir(ruta)) {
                 perror("Error");
             }
         }
     }
+
     //Si es una palabra
-    else
-    {
-        if (args[1] == NULL)
-        {
-            if (chdir(getenv("HOME")))
-            {
+    else {
+        if (args[1] == NULL && chdir(getenv("HOME"))) {
                 perror("Error");
-            }
-        }
-        else
-        {
-            if (chdir(args[1]))
-            {
+
+        } else if (chdir(args[1])) {
                 perror("Error");
-            }
         }
     }
 
     // <<En este nivel, a modo de test, muestra por pantalla el directorio al que nos hemos trasladado.>>
-  
     char *cwd = getcwd(NULL, 0);
     printf("Directorio actual: %s\n", cwd);
     free(cwd);
 
-    // ANTES
-    // if (getcwd(cwd, sizeof(cwd)) != NULL) {
-    //     printf("Directorio actual: %s\n", cwd);
-    // } else {
-    //     perror("getcwd");
-    // }
-
-    // TO-DO: actualizar prompt al cambiar de directorio
-
     return 1;
 }
-/**
- * Método que borra un caracter de un "array/puntero"
- **/
-void borradorCaracter(char *args, char caracter)
-{
-    int indice = 0;
-    int indiceNuevo = 0;
 
-    while (args[indice])
-    {
-        if (args[indice] != caracter)
-        {
-            args[indiceNuevo] = args[indice];
-            indiceNuevo++;
+// Método que borra un caracter de un "array/puntero"
+void borradorCaracter(char *args, char caracter) {
+    int i = 0;
+    int iNew = 0;
+
+    while (args[i]) {
+        if (args[i] != caracter) {
+            args[iNew] = args[i];
+            iNew++;
         }
-        indice++;
+        i++;
     }
-    args[indiceNuevo] = 0;
+    args[iNew] = 0;
 }
 
 int internal_export(char **args)

@@ -1,160 +1,112 @@
 /* NIVEL 3 */
 #include "nivel3.h"
-/* RESUMEN TO-DO 23/11/2023
-    Revisar execute_line()
-    Revisar internal_source()
 
-*/
 
-//Declaramos array de trabajos
 static struct info_job jobs_list[N_JOBS];
-//Variable que almacena el nombre del minishell
 static char mi_shell[COMMAND_LINE_SIZE];
 
 /* --- COMANDOS INTERNOS --- */
 
-int internal_cd(char **args)
-{
-    // falta control de error
+/* ------------------------- */
+/* INTERNAL CD */
+int internal_cd(char **args) {
+
     char *linea = malloc(sizeof(char) * COMMAND_LINE_SIZE);
-    if (linea == NULL)
-    {
+
+    if (linea == NULL) {
         fprintf(stderr, "No hay memoria dinámica disponible en este momento.\n");
     }
 
     //Concatenamos los args
-    for (int i = 0; args[i]; i++)
-    {
+    for (int i = 0; args[i]; i++) {
         strcat(linea, " ");
         strcat(linea, args[i]);
     }
 
-    // Separadores en ASCII: barra,comillas,comilla, espacio
+    // Separadores: barra,comillas,comilla simple, espacio
     const int sep[] = {92, 34, 39, 32};
 
-    if (args[2] != NULL)
-    {
-        //Miramos si es un caso escepcional
-        int numeroLetrasArgs1 = strlen(args[1]);
-        int permitido = 1;
-        //miramos comilla o comillas
-
+    if (args[2] != NULL) {
+        //Miramos si es un caso especial
+        int nLetsArgs1 = strlen(args[1]);
+        int permiso = 1;
         char *ruta;
-        //comilla
-        if (args[1][0] == (char)sep[1])
-        {
+        
+        //Si es comilla simple
+        if (args[1][0] == (char)sep[1]) {
             ruta = strchr(linea, (char)(sep[1]));
             borradorCaracter(ruta, (char)sep[1]);
         }
-        //comillas
-        else if (args[1][0] == (char)sep[2])
-        {
+
+        //Si son comillas
+        else if (args[1][0] == (char)sep[2]) {
             ruta = strchr(linea, (char)(sep[2]));
             borradorCaracter(ruta, (char)sep[2]);
         }
-        //barra
-        else if (args[1][numeroLetrasArgs1 - 1] == (char)sep[0])
-        {
+
+        //Si es la barra
+        else if (args[1][nLetsArgs1 - 1] == (char)sep[0]) {
             ruta = strchr(linea, args[1][0]);
             borradorCaracter(ruta, (char)sep[0]);
         }
-        else
-        {
-            permitido = 0;
+        else {
+            permiso = 0;
         }
 
         //Si se permiten 2 palabras después del cd
-        if (!permitido)
-        {
-            fprintf(stderr, "Error: Too much arguments\n");
-        }
-        else
-        {
-            if (chdir(ruta))
-            {
-                perror("Error");
-            }
-        }
-    }
-    //Si es una palabra
-    else
-    {
-        if (args[1] == NULL)
-        {
-            if (chdir(getenv("HOME")))
-            {
-                perror("Error");
-            }
-        }
-        else
-        {
-            if (chdir(args[1]))
-            {
-                perror("Error");
-            }
-        }
-    }
-    /**
- * Método que borra un caracter de un "array/puntero"
- **/
-void borradorCaracter(char *args, char caracter)
-{
-    int indice = 0;
-    int indiceNuevo = 0;
+        if (!permiso) {
+            fprintf(stderr, "Error: Demasiados Argumentos\n");
 
-    while (args[indice])
-    {
-        if (args[indice] != caracter)
-        {
-            args[indiceNuevo] = args[indice];
-            indiceNuevo++;
+        } else {
+            fprintf(stderr, "ruta: %s\n",ruta);
+
+            if (chdir(ruta)) {
+                perror("Error");
+            }
         }
-        indice++;
     }
-    args[indiceNuevo] = 0;
-}
+
+    //Si es una palabra
+    else {
+        if (args[1] == NULL && chdir(getenv("HOME"))) {
+                perror("Error");
+
+        } else if (chdir(args[1])) {
+                perror("Error");
+        }
+    }
 
     // <<En este nivel, a modo de test, muestra por pantalla el directorio al que nos hemos trasladado.>>
-  
     char *cwd = getcwd(NULL, 0);
     printf("Directorio actual: %s\n", cwd);
     free(cwd);
 
-    // ANTES
-    // if (getcwd(cwd, sizeof(cwd)) != NULL) {
-    //     printf("Directorio actual: %s\n", cwd);
-    // } else {
-    //     perror("getcwd");
-    // }
-
-    // TO-DO: actualizar prompt al cambiar de directorio
-
     return 1;
 }
-/**
- * Método que borra un caracter de un "array/puntero"
- **/
-void borradorCaracter(char *args, char caracter)
-{
-    int indice = 0;
-    int indiceNuevo = 0;
 
-    while (args[indice])
-    {
-        if (args[indice] != caracter)
-        {
-            args[indiceNuevo] = args[indice];
-            indiceNuevo++;
+// Método que borra un caracter de un "array/puntero"
+void borradorCaracter(char *args, char caracter) {
+    int i = 0;
+    int iNew = 0;
+
+    while (args[i]) {
+        if (args[i] != caracter) {
+            args[iNew] = args[i];
+            iNew++;
         }
-        indice++;
+        i++;
     }
-    args[indiceNuevo] = 0;
+    args[iNew] = 0;
 }
-   
 
-int internal_export(char **args) {
+
+/* ---------------------- */
+/* INTERNAL EXPORT */
+int internal_export(char **args)
+{
     // Antes de nada: Comprobar si hay argumento siquiera
-    if (args[1] == NULL) {
+    if (args[1] == NULL)
+    {
         printf(ROJO_T "No has puesto ningún argumento. Uso correcto: export NOMBRE=VALOR\n");
         return 0;
     }
@@ -172,31 +124,37 @@ int internal_export(char **args) {
     } else {
         strcpy(valor, args[1] + nombre_length + 1);
     }
-   
 
-    //TEMPORALMENTE imprimir tokens obtenidos
-    printf("PARÁMETRO NOMBRE: %s\n",nombre);
-    printf("PARÁMETRO VALOR: %s\n",valor);
+    // TEMPORALMENTE imprimir tokens obtenidos
+    printf("PARÁMETRO NOMBRE: %s\n", nombre);
+    printf("PARÁMETRO VALOR: %s\n", valor);
 
     // TEMPORALMENTE: Mostrar valor inicial
     char *valInicial = getenv(nombre);
-    if (valInicial != NULL) {
+    if (valInicial != NULL)
+    {
         printf("Valor inicial de %s: %s\n", nombre, valInicial);
-    } else {
+    }
+    else
+    {
         printf("Valor inicial de %s es nulo / no existe \n", nombre);
     }
 
     // ASIGNAR variable con setenv()
-    if (setenv(nombre, valor, 1) != 0) {
+    if (setenv(nombre, valor, 1) != 0)
+    {
         perror("setenv");
-        return 0; 
+        return 0;
     }
 
     // TEMPORALMENTE comprobar el nuevo valor de la variable
     char *pruebaNuevo = getenv(nombre);
-    if (pruebaNuevo != NULL) {
+    if (pruebaNuevo != NULL)
+    {
         printf("Nuevo valor para %s: %s\n", nombre, pruebaNuevo);
-    } else {
+    }
+    else
+    {
         perror("getenv");
         return 0;
     }
@@ -204,119 +162,143 @@ int internal_export(char **args) {
     return 1;
 }
 
-
+/* ---------------------- */
+/* INTERNAL SOURCE */
 int internal_source(char **args) {
 
-    char *linea = (char *) malloc(sizeof(char) * COMMAND_LINE_SIZE);
-
-    if (linea) {
-        FILE *fichero = fopen(args[1], "r"); //Abrimos el fichero
-
-        if (fichero) {
-
-            //Leemos linea a linea en el fichero
-            while (fgets(linea, COMMAND_LINE_SIZE, fichero)) {
-                execute_line(linea);//Pasamos la linea al execute line
-                fflush(fichero); //Limpiamos el buffer
-            }
-
-            fclose(fichero); //Cerramos fichero
-            free(linea);
-            return EXIT_SUCCESS;
-
-        } else {
-
-            perror("Error");
-            free(linea);
-        }
+    if (!args[1]){
+        printf(stderr, ROJO_T "Error de sintaxis. Uso: source <nombre_fichero>\n");
+        return -1;
     }
-
-    return EXIT_FAILURE;
+    FILE *fichero;
+    fichero =fopen(args[1], "r");
+    if(!fichero){
+        printf(stderr, ROJO_T "Error %d: %s\n", errno, strerror(errno));
+        return -1;
+    }
+    char str[100];
+    while (fgets(str, 100, fichero)){
+        puts(str);
+        fflush(fichero);
+    }
+    fclose(fichero);
+  return 0;
     return 1; // TRUE
 }
 
-int internal_jobs(char **args) {
+/* ---------------------- */
+/* INTERNAL JOBS */
+int internal_jobs(char **args)
+{
     // Implementar lógica para mostrar trabajos en segundo plano
     printf(GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n");
     return 1; // TRUE
 }
 
-int internal_fg(char **args) {
+/* ---------------------- */
+/* INTERNAL FG */
+int internal_fg(char **args)
+{
     // Implementar lógica para llevar un trabajo a primer plano
     printf(GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n");
     return 1; // TRUE
 }
 
-int internal_bg(char **args) {
+/* ---------------------- */
+/* INTERNAL BG */
+int internal_bg(char **args)
+{
     // Implementar lógica para llevar un trabajo a segundo plano
     printf(GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n");
     return 1; // TRUE
 }
 
-/* --- --- --- ---*/
+/* --- --- --- --- --- ---*/
 
-int check_internal(char **args) {
-    if (args[0] == NULL) {
+
+
+/* ---------------------- */
+/* CHECK INTERNAL */
+int check_internal(char **args)
+{
+    if (args[0] == NULL)
+    {
         return 0; // No hay comando
-    } else if(strcmp(args[0], "exit") == 0) {
+    }
+    else if (strcmp(args[0], "exit") == 0)
+    {
         printf("\rEXIT.\n");
         exit(0);
-    } else if (strcmp(args[0], "cd") == 0) {
-         internal_cd(args);
-         return 1;
-    } else if (strcmp(args[0], "export") == 0) {
-         internal_export(args);
-         return 1;
-    } else if (strcmp(args[0], "source") == 0) {
-         internal_source(args);
-         return 1;
-    } else if (strcmp(args[0], "jobs") == 0) {
-         internal_jobs(args);
-         return 1;
-    } else if (strcmp(args[0], "fg") == 0) {
-         internal_fg(args);
-         return 1;
-    } else if (strcmp(args[0], "bg") == 0) {
-         internal_bg(args);
-         return 1;
+    }
+    else if (strcmp(args[0], "cd") == 0)
+    {
+        internal_cd(args);
+        return 1;
+    }
+    else if (strcmp(args[0], "export") == 0)
+    {
+        internal_export(args);
+        return 1;
+    }
+    else if (strcmp(args[0], "source") == 0)
+    {
+        internal_source(args);
+        return 1;
+    }
+    else if (strcmp(args[0], "jobs") == 0)
+    {
+        internal_jobs(args);
+        return 1;
+    }
+    else if (strcmp(args[0], "fg") == 0)
+    {
+        internal_fg(args);
+        return 1;
+    }
+    else if (strcmp(args[0], "bg") == 0)
+    {
+        internal_bg(args);
+        return 1;
     }
     return 0; // No es un comando aceptado
 }
 
-//Método main
-int main(char *argv) {
-
+/* ---------------------- */
+/* METODO MAIN */
+int main()
+{
     char line[COMMAND_LINE_SIZE];
-
-    //Inicializamos los datos del job_list
-    jobs_list[0].pid = 0;
-    jobs_list[0].estado = 'N';
-    memset(jobs_list[0].cmd, '\0', COMMAND_LINE_SIZE);
-    strcpy(mi_shell, argv[0]);
-    
-    while (read_line(line)) {
+    while (read_line(line))
+    {
         execute_line(line);
     }
     return 0;
 }
 
-
-//Mètodo para leer lineas de comandos
-char *read_line(char *line) {
+/* ---------------------- */
+/* READ LINE */
+char *read_line(char *line)
+{
     imprimir_prompt();
     // Lee la línea y comprueba si no es nula
-    if (fgets(line, COMMAND_LINE_SIZE, stdin) != NULL) {
+    if (fgets(line, COMMAND_LINE_SIZE, stdin) != NULL)
+    {
         // Sustituye el carácter final de new line por '\0'
         size_t length = strlen(line);
-        if (line[length - 1] == '\n') {
+        if (line[length - 1] == '\n')
+        {
             line[length - 1] = '\0';
         }
 
         return line;
-    } else if (feof(stdin)) { //Ha pulsado Ctrl+D (salir)
+    }
+    else if (feof(stdin))
+    { // Ha pulsado Ctrl+D (salir)
         printf("\rCTRL+D. FIN.\n");
         exit(0);
-    } else { //línea nula
+    }
+    else
+    { // línea nula
         return NULL;
     }
 
@@ -327,102 +309,96 @@ char *read_line(char *line) {
     sleep(0.5);
 }
 
-
-//Método que imprime el prompt personalizado
-int imprimir_prompt() {
+/* ---------------------- */
+/* IMPRIMIR PROMPT */
+int imprimir_prompt()
+{
     printf(NEGRITA ROJO_T "%s", getenv("USER"));
     printf(RESET ":");
     printf(NEGRITA AZUL_T "~%s", getenv("PWD"));
-    printf(RESET "%c ", PROMPT); //printf("$ ")
+    printf(RESET "%c ", PROMPT); // printf("$ ")
     return 0;
 }
 
-int parse_args(char **args, char *line){
+/* ---------------------- */
+/* PARSE ARGS */
+int parse_args(char **args, char *line)
+{
     char *token;
     int i = 0;
 
     token = strtok(line, " ");
-    while (token != NULL) {
-        if (i >= ARGS_SIZE || token[0] == '#') {
+    while (token != NULL)
+    {
+        if (i >= ARGS_SIZE || token[0] == '#')
+        {
             // Esto se ejeucta si: comentario o núm max de argumentos
-            args[i] = NULL; 
+            args[i] = NULL;
             break;
         }
 
         // Asignar suficiente memoria a args[i]
         args[i] = (char *)malloc(strlen(token) + 1);
-        
+
         // Copiar el token a args[i]
         strcpy(args[i], token);
 
-        //NULL porque en realidad estamos iterando sobre el propio token
-        token = strtok(NULL, " "); 
+        // NULL porque en realidad estamos iterando sobre el propio token
+        token = strtok(NULL, " ");
         i++;
     }
 
     args[i] = NULL; // Último elemento debe ser NULL
 
-    // [PRUEBA, QUITAR LUEGO]: imprimir los tokens obtenidos
-    for (int j = 0; args[j] != NULL; j++) {
+    // [PRUEBA, QUITAR LUEGO]: imprimir los tokens obtenidos ----------------------------------------------------QUITAR
+    for (int j = 0; args[j] != NULL; j++)
+    {
         printf("args[%d]: %s\n", j, args[j]);
     }
 
-    //Devolvemos núm de tokens !NULL (el contador i)
+    // Devolvemos núm de tokens !NULL (el contador i)
     return i;
 }
 
-
+/* ---------------------- */
+/* EXECUTE LINE */
 int execute_line(char *line) {
-    char *args[ARGS_SIZE];
+    char* args[ARGS_SIZE];
+    pid_t pid;
+    int status;
+    strcpy(jobs_list[0].cmd, line);
+    jobs_list[0].estado = 'E';
     parse_args(args, line);
-
-    if (args[0]) {
-        if (!check_internal(args)) {
-            int estado;
-            pid_t pid = fork();
-
-            //Hijo
-            if (pid == 0) {
-                printf(GRIS_T "[execute_line() → PID padre: %d(%s)]\n", getppid(), jobs_list[0].cmd);
-                printf(GRIS_T "[execute_line() → PID hijo: %d]\n", getpid());
-
-                if (execvp(args[0], args)) {
-                    printf(ROJO_T "Error al leer el comando externo: %s. \n", args[0]);
-                    exit(EXIT_FAILURE); //Terminacion anormal
-                }
-
-                exit(EXIT_SUCCESS); //Terminacion correcta
-
-            //Padre
-            } else if (pid > 0) {
-                pid = wait(&estado);
-
-                //EL hijo termina de manera normal
-                if(WIFEXITED(estado)) {
-                    printf(GRIS_T "[El proceso hijo %d ha finalizado con exit(), estado: %d]\n", pid, WEXITSTATUS(estado));
-                    //Reseteamos los datos
+    if (!check_internal(args)) {
+        fprintf(stderr, GRIS_T "[execute_line()→ PID padre: %d(%s)]\n", getpid(), jobs_list[0].cmd);
+        pid = fork();
+        if (pid == 0) {//hijo
+            fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d]\n", getpid());
+            execvp(args[0], args);
+            fprintf(stderr, ROJO_T "%s: no se encontró la orden\n", line);
+            exit(-1);
+        }
+        else if (pid > 0) {//padre
+            wait(&status);
+            if (WIFEXITED(status)) {
+                fprintf(stderr, GRIS_T "[execute_line()→ Proceso hijo %d finalizado con exit(), estado: %d]\n", pid, WEXITSTATUS(status));
+                //Resetear datos
+                jobs_list[0].pid = 0;
+                jobs_list[0].estado = 'N';
+                memset(jobs_list[0].cmd, '\0', COMMAND_LINE_SIZE);
+            }
+            else {
+                if (WIFSIGNALED(status)) {
+                    fprintf(stderr, ROJO_T "[execute_line()→ Proceso hijo %d finalizado por señal %d]\n", pid, WTERMSIG(status));
                     jobs_list[0].pid = 0;
                     jobs_list[0].estado = 'N';
                     memset(jobs_list[0].cmd, '\0', COMMAND_LINE_SIZE);
                 }
-
-                if(WIFSIGNALED(estado)) {
-                    printf(GRIS_T "[El proceso hijo %d ha finalizado por señal, estado: %d]\n", pid, WTERMSIG(estado));
-                    //Reseteamos los datos
-                    jobs_list[0].pid = 0;
-                    jobs_list[0].estado = 'N';
-                    memset(jobs_list[0].cmd, '\0', COMMAND_LINE_SIZE);
-                }
-
-            //Error de fork
-            } else {
-                perror("Error de fork");
-                exit(EXIT_FAILURE);
             }
         }
+        else {
+            fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
+        }
     }
-
-    free(args);
-    return EXIT_SUCCESS;
-
-} 
+    return 0;
+}
