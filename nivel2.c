@@ -1,7 +1,6 @@
 /* NIVEL 2 */
 #include "nivel2.h"
 /* RESUMEN TO-DO 14/11/2023
-    cd avanzado en internal_cd()
 
 */
 

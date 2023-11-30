@@ -23,8 +23,26 @@ int internal_cd(char **args) {
             perror("cd");
         }
     } else {
-        // ª
-        // TO-DO: cd avanzado
+
+        // cd avanzado
+        char path[COMMAND_LINE_SIZE];
+        strcpy(path, args[1]);
+
+        for (int i = 2; args[i] != NULL; ++i) {
+            strcat(path, " ");
+            strcat(path, args[i]);
+        }
+
+        int len = strlen(path);
+        
+        if (len >= 2 && (path[0] == '\'' || path[0] == '\"') && path[0] == path[len - 1]) {
+            memmove(path, path + 1, len - 2);
+            path[len - 2] = '\0';
+        }
+
+        if (chdir(path) != 0) {
+            perror("cd");
+        }
     }
 
     // <<En este nivel, a modo de test, muestra por pantalla el directorio al que nos hemos trasladado.>>
