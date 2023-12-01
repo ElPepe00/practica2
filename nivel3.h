@@ -50,3 +50,6 @@ struct info_job {
    char estado;
    char cmd[COMMAND_LINE_SIZE];
 };
+
+static struct info_job jobs_list[N_JOBS];
+static char mi_shell[COMMAND_LINE_SIZE];

@@ -1,10 +1,6 @@
 /* NIVEL 3 */
 #include "nivel3.h"
 
-
-static struct info_job jobs_list[N_JOBS];
-static char mi_shell[COMMAND_LINE_SIZE];
-
 /* --- COMANDOS INTERNOS --- */
 
 /* ------------------------- */
@@ -102,8 +98,7 @@ void borradorCaracter(char *args, char caracter) {
 
 /* ---------------------- */
 /* INTERNAL EXPORT */
-int internal_export(char **args)
-{
+int internal_export(char **args) {
     // Antes de nada: Comprobar si hay argumento siquiera
     if (args[1] == NULL)
     {
@@ -219,8 +214,7 @@ int internal_bg(char **args)
 
 /* ---------------------- */
 /* CHECK INTERNAL */
-int check_internal(char **args)
-{
+int check_internal(char **args) {
     if (args[0] == NULL)
     {
         return 0; // No hay comando
