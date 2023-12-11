@@ -401,17 +401,20 @@ int execute_line(char *line) {
     parse_args(args, line);
     if (!check_internal(args)) {
         fprintf(stderr, GRIS_T "[execute_line()→ PID padre: %d (./nivel3)]\n", getppid());
+        printf(RESET);
         pid = fork();
         if (pid == 0) {//hijo
             fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d (%s)]\n", getpid(), jobs_list[0].cmd);
+            printf(RESET);
             execvp(args[0], args);
             fprintf(stderr, ROJO_T "%s: no se encontró la orden\n", line);
-            exit(-1);
+            printf(RESET);
         }
         else if (pid > 0) {//padre
             wait(&status);
             if (WIFEXITED(status)) {
                 fprintf(stderr, GRIS_T "[execute_line()→ Proceso hijo %d finalizado con exit(), estado: %d]\n", pid, WEXITSTATUS(status));
+                printf(RESET);
                 //Resetear datos
                 jobs_list[0].pid = 0;
                 jobs_list[0].estado = 'N';
@@ -420,6 +423,7 @@ int execute_line(char *line) {
             else {
                 if (WIFSIGNALED(status)) {
                     fprintf(stderr, ROJO_T "[execute_line()→ Proceso hijo %d finalizado por señal %d]\n", pid, WTERMSIG(status));
+                    printf(RESET);
                     jobs_list[0].pid = 0;
                     jobs_list[0].estado = 'N';
                     memset(jobs_list[0].cmd, '\0', COMMAND_LINE_SIZE);
