@@ -161,17 +161,51 @@ int internal_export(char **args) {
 /* INTERNAL SOURCE */
 int internal_source(char **args) {
 
+    char *str = (char *) malloc(sizeof(char) * COMMAND_LINE_SIZE);
+
+    if (str) {
+
+        FILE *fichero = fopen(args[1], "r");
+
+        if (fichero) {
+
+            while (fgets(str, COMMAND_LINE_SIZE, fichero)) {
+
+                execute_line(str);
+                fflush(fichero);
+                printf("\n");
+                
+            }
+
+            fclose(fichero);
+            free(str);
+
+            return 0;
+
+
+        } else {
+
+            perror(ROJO_T "Error");
+            free(str);
+
+        }
+
+        
+    }
+
+    return 1;
+/*
     if (!args[1]){
-        printf(stderr, ROJO_T "Error de sintaxis. Uso: source <nombre_fichero>\n");
+        fprintf(stderr, ROJO_T "Error de sintaxis. Uso: source <nombre_fichero>\n");
         return -1;
     }
     FILE *fichero;
     fichero =fopen(args[1], "r");
-    if(!fichero){
-        printf(stderr, ROJO_T "Error %d: %s\n", errno, strerror(errno));
+    if(fichero){
+        fprintf(stderr, ROJO_T "Error %d: %s\n", errno, strerror(errno));
         return -1;
     }
-    char str[100];
+    
     while (fgets(str, 100, fichero)){
         puts(str);
         fflush(fichero);
@@ -179,6 +213,7 @@ int internal_source(char **args) {
     fclose(fichero);
   return 0;
     return 1; // TRUE
+*/
 }
 
 /* ---------------------- */
@@ -321,9 +356,9 @@ int parse_args(char **args, char *line)
     char *token;
     int i = 0;
 
-    token = strtok(line, " ");
-    while (token != NULL)
-    {
+    token = strtok(line, " \n\t\r");
+
+    while (token != NULL) {
         if (i >= ARGS_SIZE || token[0] == '#')
         {
             // Esto se ejeucta si: comentario o núm max de argumentos
@@ -338,7 +373,7 @@ int parse_args(char **args, char *line)
         strcpy(args[i], token);
 
         // NULL porque en realidad estamos iterando sobre el propio token
-        token = strtok(NULL, " ");
+        token = strtok(NULL, " \n\t\r");
         i++;
     }
 
@@ -357,6 +392,7 @@ int parse_args(char **args, char *line)
 /* ---------------------- */
 /* EXECUTE LINE */
 int execute_line(char *line) {
+
     char* args[ARGS_SIZE];
     pid_t pid;
     int status;
@@ -364,10 +400,10 @@ int execute_line(char *line) {
     jobs_list[0].estado = 'E';
     parse_args(args, line);
     if (!check_internal(args)) {
-        fprintf(stderr, GRIS_T "[execute_line()→ PID padre: %d(%s)]\n", getpid(), jobs_list[0].cmd);
+        fprintf(stderr, GRIS_T "[execute_line()→ PID padre: %d (./nivel3)]\n", getppid());
         pid = fork();
         if (pid == 0) {//hijo
-            fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d]\n", getpid());
+            fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d (%s)]\n", getpid(), jobs_list[0].cmd);
             execvp(args[0], args);
             fprintf(stderr, ROJO_T "%s: no se encontró la orden\n", line);
             exit(-1);

@@ -10,6 +10,7 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <signal.h>
 
 //Tamaño línea de comandos y número máximo de argumentos
 #define COMMAND_LINE_SIZE 1024
