@@ -294,7 +294,7 @@ int check_internal(char **args) {
 
 /* ---------------------- */
 /* METODO MAIN */
-int main(int argc, char** argv)
+int main(int argc, char* argv[])
 {
     char line[COMMAND_LINE_SIZE];
     jobs_list[0].pid = 0;
