@@ -43,6 +43,7 @@ int internal_source(char **args);
 int internal_jobs(char **args);
 
 void borrarCaracter(char *args, char caracter);
+char *replaceWord(const char *cadena, const char *cadenaAntigua, const char *nuevaCadena);
 void reaper(int signum);
 void ctrlc(int signum);
 

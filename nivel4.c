@@ -1,6 +1,27 @@
 /* NIVEL 4 */
 #include "nivel4.h"
 
+/* ---------------------- */
+/* METODO MAIN */
+int main(int argc, char* argv[])
+{
+    char line[COMMAND_LINE_SIZE];
+    jobs_list[0].pid = 0;
+    jobs_list[0].estado = 'N';
+    memset(jobs_list[0].cmd, '\0', strlen(jobs_list[0].cmd));
+    strcpy(mi_shell, argv[0]);
+
+    // Manejadores
+    signal(SIGCHLD, reaper);
+    signal(SIGINT, ctrlc);
+
+    while (read_line(line))
+    {
+        execute_line(line);
+    }
+    return 0;
+}
+
 /* --- COMANDOS INTERNOS --- */
 
 /* ------------------------- */
@@ -102,7 +123,7 @@ int internal_export(char **args) {
     // Antes de nada: Comprobar si hay argumento siquiera
     if (args[1] == NULL)
     {
-        printf(ROJO_T "No has puesto ningún argumento. Uso correcto: export NOMBRE=VALOR\n");
+        printf(ROJO_T "No has puesto ningún argumento. Uso correcto: export NOMBRE=VALOR\n" RESET);
         return 0;
     }
 
@@ -113,7 +134,7 @@ int internal_export(char **args) {
 
     // Comprobar que el argumento no esté 'vacío' (p ej "export =" da error)
     if (valor == NULL) {
-        printf(ROJO_T "El argumento del valor esta vacio");
+        fprintf(stderr, ROJO_T "El argumento del valor esta vacio" RESET);
         return 0;
 
     } else {
@@ -256,7 +277,6 @@ int check_internal(char **args) {
     }
     else if (strcmp(args[0], "exit") == 0)
     {
-        printf("\rEXIT.\n");
         exit(0);
     }
     else if (strcmp(args[0], "cd") == 0)
@@ -290,27 +310,6 @@ int check_internal(char **args) {
         return 1;
     }
     return 0; // No es un comando aceptado
-}
-
-/* ---------------------- */
-/* METODO MAIN */
-int main(int argc, char* argv[])
-{
-    char line[COMMAND_LINE_SIZE];
-    jobs_list[0].pid = 0;
-    jobs_list[0].estado = 'N';
-    mmemset(jobs_list[0].cmd, '\0', strlen(jobs_list[0].cmd));
-    strcpy(mi_shell, argv[0]);
-
-    // Manejadores
-    signal(SIGCHLD, reaper);
-    signal(SIGINT, ctrlc);
-
-    while (read_line(line))
-    {
-        execute_line(line);
-    }
-    return 0;
 }
 
 /* ---------------------- */
@@ -350,10 +349,11 @@ char *read_line(char *line) {
 /* IMPRIMIR PROMPT */
 int imprimir_prompt()
 {
+    
     printf(NEGRITA ROJO_T "%s", getenv("USER"));
     printf(RESET ":");
     printf(NEGRITA AZUL_T "~%s", getenv("PWD"));
-    printf(RESET "%c ", PROMPT); // printf("$ ")
+    printf(RESET VERDE_T "%c " RESET, PROMPT); // printf("$ ")
     return 0;
 
     fflush(stdout);
@@ -369,31 +369,23 @@ int parse_args(char **args, char *line)
     token = strtok(line, " \n\t\r");
 
     while (token != NULL) {
-        if (i >= ARGS_SIZE || token[0] == '#')
+
+        args[i] = token;
+
+        //Miramos si es un comentario
+        if (strncmp(args[i], "#", 1) == 0)
         {
-            // Esto se ejeucta si: comentario o núm max de argumentos
-            args[i] = NULL;
             break;
         }
 
-        // Asignar suficiente memoria a args[i]
-        args[i] = (char *)malloc(strlen(token) + 1);
-
-        // Copiar el token a args[i]
-        strcpy(args[i], token);
-
+        i++;
         // NULL porque en realidad estamos iterando sobre el propio token
         token = strtok(NULL, " \n\t\r");
-        i++;
+        
     }
 
     args[i] = NULL; // Último elemento debe ser NULL
-
-    // [PRUEBA, QUITAR LUEGO]: imprimir los tokens obtenidos ----------------------------------------------------QUITAR
-    for (int j = 0; args[j] != NULL; j++)
-    {
-        printf("args[%d]: %s\n", j, args[j]);
-    }
+    strtok(line, "\n\r"); // ELiminamos el salto de linea
 
     // Devolvemos núm de tokens !NULL (el contador i)
     return i;
@@ -418,17 +410,13 @@ int execute_line(char *line) {
             signal(SIGCHLD, SIG_DFL);
             signal(SIGINT, SIG_IGN);
 
-            fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d (%s)]\n", getpid(), jobs_list[0].cmd);
-            printf(RESET);
+            fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d(%s)]\n" RESET, getpid(), jobs_list[0].cmd);
             execvp(args[0], args);
-            fprintf(stderr, ROJO_T "%s: no se encontró la orden\n", line);
-            printf(RESET);
-            exit(-1); //--------------------------------------------------------------------------------------------------------- exit(-1)
+            fprintf(stderr, ROJO_T "%s: no se encontró la orden\n" RESET, line);
+            exit(-1);
         }
         else if (pid > 0) {//PADRE
-            fprintf(stderr, GRIS_T "[execute_line()→ PID Padre %d(%s)]\n", getpid(), mi_shell);
-            printf(RESET);
-            //Resetear datos
+            fprintf(stderr, GRIS_T "[execute_line()→ PID Padre %d(%s)]\n" RESET, getpid(), mi_shell);            //Resetear datos
             jobs_list[0].pid = pid;
             jobs_list[0].estado = 'E';
             strcpy(jobs_list[0].cmd, line);
@@ -439,7 +427,7 @@ int execute_line(char *line) {
             }
         }
         else {
-            fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
+            fprintf(stderr, ROJO_T "Error %d: %s\n" RESET, errno, strerror(errno));
         }
     }
     return 0;
@@ -466,16 +454,14 @@ void reaper(int signum) {
 
         if (WIFEXITED(estado)) {
             char mensaje[1200];
-            sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d (%s) finalizado con exit code %d]\n", ended, jobs_list[0].cmd, WEXITSTATUS(estado));
+            sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d(%s) finalizado con exit code %d]\n" RESET, ended, jobs_list[0].cmd, WEXITSTATUS(estado));
             write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
 
         } else if (WIFSIGNALED(estado)) {
             char mensaje[1200];
-            sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d (%s) finalizado con exit code %d]\n", ended, jobs_list[0].cmd, WTERMSIG(estado));
+            sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d(%s) finalizado con exit code %d]\n" RESET, ended, jobs_list[0].cmd, WTERMSIG(estado));
             write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
         }
-
-        printf(RESET);
     }
 }
 
@@ -493,26 +479,27 @@ void ctrlc(int signum) {
 
         //Miramos si es nuestro shell
         if (strcmp(jobs_list[0].cmd, mi_shell)) {
-            fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d (%s)]\n",
+            fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d (%s)]\n" RESET,
                 getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
 
-            printf(GRIS_T "[ctrlc()→ Señal %d enviada a %d(%s) por %d(%s)]", SIGTERM, jobs_list[0].pid, jobs_list[0].cmd, getpid(), mi_shell);
+            printf(GRIS_T "[ctrlc()→ Señal %d enviada a %d(%s) por %d(%s)]" RESET, 
+                SIGTERM, jobs_list[0].pid, jobs_list[0].cmd, getpid(), mi_shell);
 
             kill(jobs_list[0].pid, SIGTERM);
 
         } else {
-            fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n",
+            fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
                 getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
 
-            fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s) debido a que su proceso en foreground es el shell]",
+            fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s) debido a que su proceso en foreground es el shell]\n" RESET,
                 SIGTERM, getpid(), mi_shell);
         }
 
     } else {
-        fprintf(stderr, GRIS_T "\n[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n",
+        fprintf(stderr, GRIS_T "\n[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
             getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
 
-        fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s)] debido a que no hay proceso en foreground]",
+        fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s)] debido a que no hay proceso en foreground]\n" RESET,
             SIGTERM, getpid(), mi_shell);
     }
 
