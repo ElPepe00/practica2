@@ -1,4 +1,4 @@
-/* NIVEL 3 HEADER */
+/* NIVEL 4 HEADER */
 
 #define _POSIX_C_SOURCE 200112L
 
@@ -43,6 +43,8 @@ int internal_source(char **args);
 int internal_jobs(char **args);
 
 void borrarCaracter(char *args, char caracter);
+void reaper(int signum);
+void ctrlc(int signum);
 
 //Declaracion constante del prompt
 char const PROMPT = '$';

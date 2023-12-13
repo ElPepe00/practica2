@@ -1,7 +1,10 @@
-/* NIVEL 2 */
-#include "nivel2.h"
+/* NIVEL 4 */
+#include "nivel4.h"
 
 /* --- COMANDOS INTERNOS --- */
+
+/* ------------------------- */
+/* INTERNAL CD */
 int internal_cd(char **args) {
 
     char *linea = malloc(sizeof(char) * COMMAND_LINE_SIZE);
@@ -92,18 +95,16 @@ void borrarCaracter(char *args, char caracter) {
     args[iNew] = 0;
 }
 
-int internal_export(char **args)
-{
+
+/* ---------------------- */
+/* INTERNAL EXPORT */
+int internal_export(char **args) {
     // Antes de nada: Comprobar si hay argumento siquiera
     if (args[1] == NULL)
     {
         printf(ROJO_T "No has puesto ningún argumento. Uso correcto: export NOMBRE=VALOR\n");
         return 0;
     }
-    //**** PREGUNTA: Se debería comprobar si hay más de 1 argumento ??
-    // (p ej: "export VAR1=VAL1 VAR2=VAL2 VAR3=VAL3"...)
-    // Y en ese caso dar error ?
-    //**** CREO QUE NO ES NECESARIO CONTROLAR MAS DE 1 ARGUMENTO
 
     // Separar NOMBRE y VALOR
     char *nombre = strtok(args[1], "=");
@@ -111,13 +112,11 @@ int internal_export(char **args)
     char *valor = (char *)malloc(strlen(args[1]) - nombre_length);
 
     // Comprobar que el argumento no esté 'vacío' (p ej "export =" da error)
-    if (valor == NULL)
-    {
+    if (valor == NULL) {
         printf(ROJO_T "El argumento del valor esta vacio");
         return 0;
-    }
-    else
-    {
+
+    } else {
         strcpy(valor, args[1] + nombre_length + 1);
     }
 
@@ -158,13 +157,67 @@ int internal_export(char **args)
     return 1;
 }
 
-int internal_source(char **args)
-{
-    // Implementar lógica para ejecutar un script desde un archivo
-    printf(GRIS_T "[internal_source()→Esta función ejecutará un fichero de líneas de comandos]\n");
+/* ---------------------- */
+/* INTERNAL SOURCE */
+int internal_source(char **args) {
+
+    char *str = (char *) malloc(sizeof(char) * COMMAND_LINE_SIZE);
+
+    if (str) {
+
+        FILE *fichero = fopen(args[1], "r");
+
+        if (fichero) {
+
+            while (fgets(str, COMMAND_LINE_SIZE, fichero)) {
+
+                execute_line(str);
+                fflush(fichero);
+                printf("\n");
+                
+            }
+
+            fclose(fichero);
+            free(str);
+
+            return 0;
+
+
+        } else {
+
+            perror(ROJO_T "Error");
+            free(str);
+
+        }
+
+        
+    }
+
+    return 1;
+/*
+    if (!args[1]){
+        fprintf(stderr, ROJO_T "Error de sintaxis. Uso: source <nombre_fichero>\n");
+        return -1;
+    }
+    FILE *fichero;
+    fichero =fopen(args[1], "r");
+    if(fichero){
+        fprintf(stderr, ROJO_T "Error %d: %s\n", errno, strerror(errno));
+        return -1;
+    }
+    
+    while (fgets(str, 100, fichero)){
+        puts(str);
+        fflush(fichero);
+    }
+    fclose(fichero);
+  return 0;
     return 1; // TRUE
+*/
 }
 
+/* ---------------------- */
+/* INTERNAL JOBS */
 int internal_jobs(char **args)
 {
     // Implementar lógica para mostrar trabajos en segundo plano
@@ -172,6 +225,8 @@ int internal_jobs(char **args)
     return 1; // TRUE
 }
 
+/* ---------------------- */
+/* INTERNAL FG */
 int internal_fg(char **args)
 {
     // Implementar lógica para llevar un trabajo a primer plano
@@ -179,6 +234,8 @@ int internal_fg(char **args)
     return 1; // TRUE
 }
 
+/* ---------------------- */
+/* INTERNAL BG */
 int internal_bg(char **args)
 {
     // Implementar lógica para llevar un trabajo a segundo plano
@@ -186,10 +243,13 @@ int internal_bg(char **args)
     return 1; // TRUE
 }
 
-/* --- --- --- ---*/
+/* --- --- --- --- --- ---*/
 
-int check_internal(char **args)
-{
+
+
+/* ---------------------- */
+/* CHECK INTERNAL */
+int check_internal(char **args) {
     if (args[0] == NULL)
     {
         return 0; // No hay comando
@@ -232,10 +292,20 @@ int check_internal(char **args)
     return 0; // No es un comando aceptado
 }
 
-// Método main
-int main()
+/* ---------------------- */
+/* METODO MAIN */
+int main(int argc, char** argv)
 {
     char line[COMMAND_LINE_SIZE];
+    jobs_list[0].pid = 0;
+    jobs_list[0].estado = 'N';
+    mmemset(jobs_list[0].cmd, '\0', strlen(jobs_list[0].cmd));
+    strcpy(mi_shell, argv[0]);
+
+    // Manejadores
+    signal(SIGCHLD, reaper);
+    signal(SIGINT, ctrlc);
+
     while (read_line(line))
     {
         execute_line(line);
@@ -243,9 +313,9 @@ int main()
     return 0;
 }
 
-// Mètodo para leer lineas de comandos
-char *read_line(char *line)
-{
+/* ---------------------- */
+/* READ LINE */
+char *read_line(char *line) {
     imprimir_prompt();
     // Lee la línea y comprueba si no es nula
     if (fgets(line, COMMAND_LINE_SIZE, stdin) != NULL)
@@ -276,7 +346,8 @@ char *read_line(char *line)
     sleep(0.5);
 }
 
-// Método que imprime el prompt personalizado
+/* ---------------------- */
+/* IMPRIMIR PROMPT */
 int imprimir_prompt()
 {
     printf(NEGRITA ROJO_T "%s", getenv("USER"));
@@ -284,16 +355,20 @@ int imprimir_prompt()
     printf(NEGRITA AZUL_T "~%s", getenv("PWD"));
     printf(RESET "%c ", PROMPT); // printf("$ ")
     return 0;
+
+    fflush(stdout);
 }
 
+/* ---------------------- */
+/* PARSE ARGS */
 int parse_args(char **args, char *line)
 {
     char *token;
     int i = 0;
 
-    token = strtok(line, " ");
-    while (token != NULL)
-    {
+    token = strtok(line, " \n\t\r");
+
+    while (token != NULL) {
         if (i >= ARGS_SIZE || token[0] == '#')
         {
             // Esto se ejeucta si: comentario o núm max de argumentos
@@ -308,13 +383,13 @@ int parse_args(char **args, char *line)
         strcpy(args[i], token);
 
         // NULL porque en realidad estamos iterando sobre el propio token
-        token = strtok(NULL, " ");
+        token = strtok(NULL, " \n\t\r");
         i++;
     }
 
     args[i] = NULL; // Último elemento debe ser NULL
 
-    // [PRUEBA, QUITAR LUEGO]: imprimir los tokens obtenidos
+    // [PRUEBA, QUITAR LUEGO]: imprimir los tokens obtenidos ----------------------------------------------------QUITAR
     for (int j = 0; args[j] != NULL; j++)
     {
         printf("args[%d]: %s\n", j, args[j]);
@@ -324,19 +399,123 @@ int parse_args(char **args, char *line)
     return i;
 }
 
-int execute_line(char *line)
-{
-    char *args[ARGS_SIZE];
+/* ---------------------- */
+/* EXECUTE LINE */
+int execute_line(char *line) {
+
+    char* args[ARGS_SIZE];
+    pid_t pid;
+    strcpy(jobs_list[0].cmd, line);
+    jobs_list[0].estado = 'E';
     parse_args(args, line);
 
-    if (strtok(line, " \t\r\n") > 0)
-    {
-        check_internal(args);
+    if (!check_internal(args)) {
+        //fprintf(stderr, GRIS_T "[execute_line()→ PID padre: %d (./nivel3)]\n", getppid());
+        //printf(RESET);
+        pid = fork();
+
+        if (pid == 0) {//HIJO
+            signal(SIGCHLD, SIG_DFL);
+            signal(SIGINT, SIG_IGN);
+
+            fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d (%s)]\n", getpid(), jobs_list[0].cmd);
+            printf(RESET);
+            execvp(args[0], args);
+            fprintf(stderr, ROJO_T "%s: no se encontró la orden\n", line);
+            printf(RESET);
+            exit(-1); //--------------------------------------------------------------------------------------------------------- exit(-1)
+        }
+        else if (pid > 0) {//PADRE
+            fprintf(stderr, GRIS_T "[execute_line()→ PID Padre %d(%s)]\n", getpid(), mi_shell);
+            printf(RESET);
+            //Resetear datos
+            jobs_list[0].pid = pid;
+            jobs_list[0].estado = 'E';
+            strcpy(jobs_list[0].cmd, line);
+            
+            //Mientras haya un proceso en foregroud pausamos
+            while (jobs_list[0].pid > 0) {
+                pause();
+            }
+        }
+        else {
+            fprintf(stderr, "Error %d: %s\n", errno, strerror(errno));
+        }
+    }
+    return 0;
+}
+
+/* ---------------------- */
+/* REAPER */
+// Manejador de la senal SIGCHLD
+void reaper(int signum) {
+
+    signal(SIGCHLD, reaper);
+
+    pid_t ended;
+    int estado;
+
+    while ((ended = waitpid(-1, &estado, WNOHANG)) > 0) {
+
+        if (ended == jobs_list[0].pid) {
+            //Reseteamos pid
+            jobs_list[0].pid = 0;
+            jobs_list[0].estado = 'F';
+            memset(jobs_list[0].cmd, '\0', strlen(jobs_list[0].cmd));
+        }
+
+        if (WIFEXITED(estado)) {
+            char mensaje[1200];
+            sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d (%s) finalizado con exit code %d]\n", ended, jobs_list[0].cmd, WEXITSTATUS(estado));
+            write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
+
+        } else if (WIFSIGNALED(estado)) {
+            char mensaje[1200];
+            sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d (%s) finalizado con exit code %d]\n", ended, jobs_list[0].cmd, WTERMSIG(estado));
+            write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
+        }
+
+        printf(RESET);
+    }
+}
+
+/* ---------------------- */
+/* CONTRLC */
+// Manejador de la senal SIGINT
+void ctrlc(int signum) {
+
+    signal(SIGINT, ctrlc);
+    printf("\n");
+    fflush(stdout); // Impresión inmediata del print
+
+    // Miramos si es un proceso hijo
+    if (jobs_list[0].pid > 0) {
+
+        //Miramos si es nuestro shell
+        if (strcmp(jobs_list[0].cmd, mi_shell)) {
+            fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d (%s)]\n",
+                getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
+
+            printf(GRIS_T "[ctrlc()→ Señal %d enviada a %d(%s) por %d(%s)]", SIGTERM, jobs_list[0].pid, jobs_list[0].cmd, getpid(), mi_shell);
+
+            kill(jobs_list[0].pid, SIGTERM);
+
+        } else {
+            fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n",
+                getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
+
+            fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s) debido a que su proceso en foreground es el shell]",
+                SIGTERM, getpid(), mi_shell);
+        }
+
+    } else {
+        fprintf(stderr, GRIS_T "\n[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n",
+            getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
+
+        fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s)] debido a que no hay proceso en foreground]",
+            SIGTERM, getpid(), mi_shell);
     }
 
-    // Liberar memoria asignada por parse_args()
-    for (int i = 0; args[i] != NULL; ++i)
-    {
-        free(args[i]);
-    }
+    printf("\n");
+    fflush(stdout); //Impresión inmediata del print
 }

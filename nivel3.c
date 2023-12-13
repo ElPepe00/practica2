@@ -31,19 +31,19 @@ int internal_cd(char **args) {
         //Si es comilla simple
         if (args[1][0] == (char)sep[1]) {
             ruta = strchr(linea, (char)(sep[1]));
-            borradorCaracter(ruta, (char)sep[1]);
+            borrarCaracter(ruta, (char)sep[1]);
         }
 
         //Si son comillas
         else if (args[1][0] == (char)sep[2]) {
             ruta = strchr(linea, (char)(sep[2]));
-            borradorCaracter(ruta, (char)sep[2]);
+            borrarCaracter(ruta, (char)sep[2]);
         }
 
         //Si es la barra
         else if (args[1][nLetsArgs1 - 1] == (char)sep[0]) {
             ruta = strchr(linea, args[1][0]);
-            borradorCaracter(ruta, (char)sep[0]);
+            borrarCaracter(ruta, (char)sep[0]);
         }
         else {
             permiso = 0;
@@ -81,7 +81,7 @@ int internal_cd(char **args) {
 }
 
 // Método que borra un caracter de un "array/puntero"
-void borradorCaracter(char *args, char caracter) {
+void borrarCaracter(char *args, char caracter) {
     int i = 0;
     int iNew = 0;
 
@@ -306,8 +306,7 @@ int main()
 
 /* ---------------------- */
 /* READ LINE */
-char *read_line(char *line)
-{
+char *read_line(char *line) {
     imprimir_prompt();
     // Lee la línea y comprueba si no es nula
     if (fgets(line, COMMAND_LINE_SIZE, stdin) != NULL)
