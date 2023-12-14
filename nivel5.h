@@ -1,4 +1,4 @@
-/* NIVEL 4 HEADER */
+/* NIVEL 5 HEADER */
 
 #define _POSIX_C_SOURCE 200112L
 
@@ -45,6 +45,12 @@ int internal_jobs(char **args);
 void borrarCaracter(char *args, char caracter);
 void reaper(int signum);
 void ctrlc(int signum);
+void ctrlz(int signum);
+int is_background(char **args);
+
+int jobs_list_add(pid_t pid, char estado, char *cmd);
+int jobs_list_find(pid_t pid);
+int jobs_list_remove(int pos);
 
 //Declaracion constante del prompt
 char const PROMPT = '$';
@@ -58,3 +64,4 @@ struct info_job {
 
 static struct info_job jobs_list[N_JOBS];
 static char mi_shell[COMMAND_LINE_SIZE];
+static int n_job = 0;
