@@ -1,6 +1,14 @@
 /* NIVEL 5 */
 #include "nivel5.h"
 
+/* PEQUEÑO BUG VISTO/SOLUCIONADO:
+    - si un comando se ejecuta con '&' y este acaba, el minishell también acaba (p.ej sleep 10 &, chromium & [sup. que chromium está instalado])
+        tiene algo que ver con el fgets del read_line() devolviendo NULL ("fgets: Interrupted system call")
+        * con chromium también sucede el error "fgets: Interrupted system call" si se hace ctrl+z
+
+    Tiene algo que ver con los signals ==> solución del Copilot: meter while(1), borrar error y volver a ejecutar los ifelse
+*/
+
 /* ---------------------- */
 /* METODO MAIN */
 int main(int argc, char* argv[])
@@ -303,34 +311,51 @@ int check_internal(char **args) {
 /* ---------------------- */
 /* READ LINE */
 char *read_line(char *line) {
-    imprimir_prompt();
-    // Lee la línea y comprueba si no es nula
-    if (fgets(line, COMMAND_LINE_SIZE, stdin) != NULL)
-    {
-        // Sustituye el carácter final de new line por '\0'
-        size_t length = strlen(line);
-        if (line[length - 1] == '\n')
-        {
-            line[length - 1] = '\0';
-        }
-
-        return line;
-    }
-    else if (feof(stdin))
-    { // Ha pulsado Ctrl+D (salir)
-        printf("\rCTRL+D. FIN.\n");
-        exit(0);
-    }
-    else
-    { // línea nula
-        return NULL;
-    }
+    //signal(SIGINT, SIG_IGN);
+    //signal(SIGTSTP, SIG_IGN);
 
     // Forzar el vaciado del buffer de salida
     fflush(stdout);
 
     // Esperar 0.5 segundos
     sleep(0.5);
+
+    imprimir_prompt();
+    // Lee la línea y comprueba si no es nula
+    //printf("Before fgets: %s\n", line); //DEBUG
+    while (1) { //solución del Copilot
+        if (fgets(line, COMMAND_LINE_SIZE, stdin) != NULL)
+        {
+            // Sustituye el carácter final de new line por '\0'
+            size_t length = strlen(line);
+            if (line[length - 1] == '\n')
+            {
+                line[length - 1] = '\0';
+            }
+
+            return line;
+        }
+        else if (feof(stdin))
+        { // Ha pulsado Ctrl+D (salir)
+            printf("\rCTRL+D. FIN.\n");
+            exit(0);
+        }
+
+        //solución del Copilot
+        else if (errno == EINTR) {
+            // fgets was interrupted by a signal, try again
+            clearerr(stdin);
+            continue;
+        }
+        
+        else
+        { // línea nula
+            perror("fgets"); //DEBUG
+        //    printf("After fgets: %s\n", line); //DEBUG
+            return NULL;
+        }
+
+    }
 }
 
 /* ---------------------- */
@@ -574,7 +599,7 @@ int is_background(char **args) {
     while (args[i] != NULL) {
         i++;
     }
-    if (!strcmp(args[i - 1], "&")) {
+    if (i>0 && /*para evitar segmentation fault*/ !strcmp(args[i - 1], "&")) {
         args[i - 1] = NULL;
         return 1;
     }
