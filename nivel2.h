@@ -13,6 +13,10 @@
 #define COMMAND_LINE_SIZE 1024
 #define ARGS_SIZE 64
 
+//Debug?
+#define DEBUGN1 1
+#define DEBUGN2 1
+
 //Colores y estilos
 #define RESET "\033[0m"
 #define NEGRO_T "\x1b[30m"

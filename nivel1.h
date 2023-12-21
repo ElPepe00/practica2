@@ -9,6 +9,9 @@
 #include <string.h>
 #include <errno.h>
 
+//Debug?
+#define DEBUGN1 1
+
 //Tamaño línea de comandos y número máximo de argumentos
 #define COMMAND_LINE_SIZE 1024
 #define ARGS_SIZE 64

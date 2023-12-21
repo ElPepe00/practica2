@@ -7,7 +7,7 @@ int internal_cd(char **args) {
     char *linea = malloc(sizeof(char) * COMMAND_LINE_SIZE);
 
     if (linea == NULL) {
-        fprintf(stderr, "No hay memoria dinámica disponible en este momento.\n");
+            fprintf(stderr, "No hay memoria dinámica disponible en este momento.\n"RESET);
     }
 
     //Concatenamos los args
@@ -48,10 +48,10 @@ int internal_cd(char **args) {
 
         //Si se permiten 2 palabras después del cd
         if (!permiso) {
-            fprintf(stderr, "Error: Demasiados Argumentos\n");
+            fprintf(stderr, "Error: Demasiados Argumentos\n"RESET);
 
         } else {
-            fprintf(stderr, "ruta: %s\n",ruta);
+            fprintf(stderr, "ruta: %s\n"RESET,ruta); 
 
             if (chdir(ruta)) {
                 perror("Error");
@@ -70,9 +70,11 @@ int internal_cd(char **args) {
     }
 
     // <<En este nivel, a modo de test, muestra por pantalla el directorio al que nos hemos trasladado.>>
-    char *cwd = getcwd(NULL, 0);
-    printf("Directorio actual: %s\n", cwd);
-    free(cwd);
+    #if DEBUGN2
+        char *cwd = getcwd(NULL, 0);   
+        fprintf(stderr,GRIS_T"Directorio actual: %s\n"RESET, cwd);
+        free(cwd);
+    #endif
 
     return 1;
 }
@@ -97,13 +99,9 @@ int internal_export(char **args)
     // Antes de nada: Comprobar si hay argumento siquiera
     if (args[1] == NULL)
     {
-        printf(ROJO_T "No has puesto ningún argumento. Uso correcto: export NOMBRE=VALOR\n");
+        fprintf(stderr,ROJO_T "No has puesto ningún argumento. Uso correcto: export NOMBRE=VALOR\n"RESET);
         return 0;
     }
-    //**** PREGUNTA: Se debería comprobar si hay más de 1 argumento ??
-    // (p ej: "export VAR1=VAL1 VAR2=VAL2 VAR3=VAL3"...)
-    // Y en ese caso dar error ?
-    //**** CREO QUE NO ES NECESARIO CONTROLAR MAS DE 1 ARGUMENTO
 
     // Separar NOMBRE y VALOR
     char *nombre = strtok(args[1], "=");
@@ -113,7 +111,7 @@ int internal_export(char **args)
     // Comprobar que el argumento no esté 'vacío' (p ej "export =" da error)
     if (valor == NULL)
     {
-        printf(ROJO_T "El argumento del valor esta vacio");
+        fprintf(stderr,ROJO_T "El argumento del valor esta vacio");
         return 0;
     }
     else
@@ -122,19 +120,21 @@ int internal_export(char **args)
     }
 
     // TEMPORALMENTE imprimir tokens obtenidos
-    printf("PARÁMETRO NOMBRE: %s\n", nombre);
-    printf("PARÁMETRO VALOR: %s\n", valor);
+    #if DEBUGN2
+        fprintf(stderr,GRIS_T"PARÁMETRO NOMBRE: %s\n"RESET, nombre);
+        fprintf(stderr,GRIS_T"PARÁMETRO VALOR: %s\n"RESET, valor);
 
-    // TEMPORALMENTE: Mostrar valor inicial
-    char *valInicial = getenv(nombre);
-    if (valInicial != NULL)
-    {
-        printf("Valor inicial de %s: %s\n", nombre, valInicial);
-    }
-    else
-    {
-        printf("Valor inicial de %s es nulo / no existe \n", nombre);
-    }
+        // TEMPORALMENTE: Mostrar valor inicial
+        char *valInicial = getenv(nombre);
+        if (valInicial != NULL)
+        {
+            fprintf(stderr,GRIS_T"Valor inicial de %s: %s\n"RESET, nombre, valInicial);
+        }
+        else
+        {
+            fprintf(stderr,GRIS_T"Valor inicial de %s es nulo / no existe \n"RESET, nombre);
+        }
+    #endif
 
     // ASIGNAR variable con setenv()
     if (setenv(nombre, valor, 1) != 0)
@@ -143,46 +143,52 @@ int internal_export(char **args)
         return 0;
     }
 
-    // TEMPORALMENTE comprobar el nuevo valor de la variable
-    char *pruebaNuevo = getenv(nombre);
-    if (pruebaNuevo != NULL)
-    {
-        printf("Nuevo valor para %s: %s\n", nombre, pruebaNuevo);
-    }
-    else
-    {
-        perror("getenv");
-        return 0;
-    }
+    #if DEBUGN2
+        // TEMPORALMENTE comprobar el nuevo valor de la variable
+        char *pruebaNuevo = getenv(nombre);
+        if (pruebaNuevo != NULL)
+        {
+            fprintf(stderr,GRIS_T"Nuevo valor para %s: %s\n"RESET, nombre, pruebaNuevo);
+        }
+        else
+        {
+            perror("getenv");
+            return 0;
+        }
+    #endif
 
     return 1;
 }
 
-int internal_source(char **args)
-{
+int internal_source(char **args) {
     // Implementar lógica para ejecutar un script desde un archivo
-    printf(GRIS_T "[internal_source()→Esta función ejecutará un fichero de líneas de comandos]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_source()→Esta función ejecutará un fichero de líneas de comandos]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
-int internal_jobs(char **args)
-{
+int internal_jobs(char **args) {
     // Implementar lógica para mostrar trabajos en segundo plano
-    printf(GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
-int internal_fg(char **args)
-{
+int internal_fg(char **args) {
     // Implementar lógica para llevar un trabajo a primer plano
-    printf(GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
-int internal_bg(char **args)
-{
+int internal_bg(char **args) {
     // Implementar lógica para llevar un trabajo a segundo plano
-    printf(GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
@@ -315,10 +321,10 @@ int parse_args(char **args, char *line)
     args[i] = NULL; // Último elemento debe ser NULL
 
     // [PRUEBA, QUITAR LUEGO]: imprimir los tokens obtenidos
-    for (int j = 0; args[j] != NULL; j++)
-    {
-        printf("args[%d]: %s\n", j, args[j]);
-    }
+    #if DEBUGN1
+        for (int j = 0; args[j] != NULL; j++)
+        { fprintf(stderr,GRIS_T "[parse_args()-> token %d: %s]\n"RESET, j, args[j]); }
+    #endif
 
     // Devolvemos núm de tokens !NULL (el contador i)
     return i;

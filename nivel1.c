@@ -78,10 +78,10 @@ int parse_args(char **args, char *line){
     args[i] = NULL; // Último elemento debe ser NULL
 
     // [PRUEBA, QUITAR EN NIVELES POSTERIORES]: imprimir los tokens obtenidos
-    int j;
-    for (j = 0; j < i; j++) {
-        printf(GRIS_T "[parse_args()-> token %d: %s]\n", j, args[j]);
-    }
+    #if DEBUGN1
+        for (int j = 0; args[j] != NULL; j++)
+        { fprintf(stderr,GRIS_T "[parse_args()-> token %d: %s]\n"RESET, j, args[j]); }
+    #endif
 
     
     
@@ -136,36 +136,48 @@ int check_internal(char **args){
 int internal_cd(char **args) {
     // Implementar lógica para cambiar de directorio
     // Devolver 1 para indicar que se ejecutó un comando interno
-    printf(GRIS_T "[internal_cd()→Esta función cambiará de directorio]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_cd()→Esta función cambiará de directorio]\n"RESET );
+    #endif
     return 1; // TRUE
 }
 
 int internal_export(char **args) {
     // Implementar lógica para exportar una variable
-    printf(GRIS_T "[internal_export()→Esta función asignará valores a variablescd de entorno]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_export()→Esta función asignará valores a variablescd de entorno]\n"RESET );
+    #endif
     return 1; // TRUE
 }
 
 int internal_source(char **args) {
     // Implementar lógica para ejecutar un script desde un archivo
-    printf(GRIS_T "[internal_source()→Esta función ejecutará un fichero de líneas de comandos]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_source()→Esta función ejecutará un fichero de líneas de comandos]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
 int internal_jobs(char **args) {
     // Implementar lógica para mostrar trabajos en segundo plano
-    printf(GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
 int internal_fg(char **args) {
     // Implementar lógica para llevar un trabajo a primer plano
-    printf(GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
 int internal_bg(char **args) {
     // Implementar lógica para llevar un trabajo a segundo plano
-    printf(GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n"RESET);
+    #endif
     return 1; // TRUE
 }

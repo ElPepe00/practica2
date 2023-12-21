@@ -10,7 +10,7 @@ int internal_cd(char **args) {
     char *linea = malloc(sizeof(char) * COMMAND_LINE_SIZE);
 
     if (linea == NULL) {
-        fprintf(stderr, "No hay memoria dinámica disponible en este momento.\n");
+        fprintf(stderr, "No hay memoria dinámica disponible en este momento.\n"RESET);
     }
 
     //Concatenamos los args
@@ -51,10 +51,10 @@ int internal_cd(char **args) {
 
         //Si se permiten 2 palabras después del cd
         if (!permiso) {
-            fprintf(stderr, "Error: Demasiados Argumentos\n");
+            fprintf(stderr, "Error: Demasiados Argumentos\n"RESET);
 
         } else {
-            fprintf(stderr, "ruta: %s\n",ruta);
+            fprintf(stderr, "ruta: %s\n"RESET,ruta);
 
             if (chdir(ruta)) {
                 perror("Error");
@@ -73,9 +73,11 @@ int internal_cd(char **args) {
     }
 
     // <<En este nivel, a modo de test, muestra por pantalla el directorio al que nos hemos trasladado.>>
-    char *cwd = getcwd(NULL, 0);
-    printf("Directorio actual: %s\n", cwd);
-    free(cwd);
+    #if DEBUGN2
+        char *cwd = getcwd(NULL, 0);   
+        fprintf(stderr,GRIS_T"Directorio actual: %s\n"RESET, cwd);
+        free(cwd);
+    #endif
 
     return 1;
 }
@@ -121,19 +123,21 @@ int internal_export(char **args) {
     }
 
     // TEMPORALMENTE imprimir tokens obtenidos
-    printf("PARÁMETRO NOMBRE: %s\n", nombre);
-    printf("PARÁMETRO VALOR: %s\n", valor);
+    #if DEBUGN2
+        fprintf(stderr,GRIS_T"PARÁMETRO NOMBRE: %s\n"RESET, nombre);
+        fprintf(stderr,GRIS_T"PARÁMETRO VALOR: %s\n"RESET, valor);
 
-    // TEMPORALMENTE: Mostrar valor inicial
-    char *valInicial = getenv(nombre);
-    if (valInicial != NULL)
-    {
-        printf("Valor inicial de %s: %s\n", nombre, valInicial);
-    }
-    else
-    {
-        printf("Valor inicial de %s es nulo / no existe \n", nombre);
-    }
+        // TEMPORALMENTE: Mostrar valor inicial
+        char *valInicial = getenv(nombre);
+        if (valInicial != NULL)
+        {
+            fprintf(stderr,GRIS_T"Valor inicial de %s: %s\n"RESET, nombre, valInicial);
+        }
+        else
+        {
+            fprintf(stderr,GRIS_T"Valor inicial de %s es nulo / no existe \n"RESET, nombre);
+        }
+    #endif
 
     // ASIGNAR variable con setenv()
     if (setenv(nombre, valor, 1) != 0)
@@ -142,17 +146,19 @@ int internal_export(char **args) {
         return 0;
     }
 
-    // TEMPORALMENTE comprobar el nuevo valor de la variable
-    char *pruebaNuevo = getenv(nombre);
-    if (pruebaNuevo != NULL)
-    {
-        printf("Nuevo valor para %s: %s\n", nombre, pruebaNuevo);
-    }
-    else
-    {
-        perror("getenv");
-        return 0;
-    }
+    #if DEBUGN2
+        // TEMPORALMENTE comprobar el nuevo valor de la variable
+        char *pruebaNuevo = getenv(nombre);
+        if (pruebaNuevo != NULL)
+        {
+            fprintf(stderr,GRIS_T"Nuevo valor para %s: %s\n"RESET, nombre, pruebaNuevo);
+        }
+        else
+        {
+            perror("getenv");
+            return 0;
+        }
+    #endif
 
     return 1;
 }
@@ -221,7 +227,9 @@ int internal_source(char **args) {
 int internal_jobs(char **args)
 {
     // Implementar lógica para mostrar trabajos en segundo plano
-    printf(GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
@@ -230,7 +238,9 @@ int internal_jobs(char **args)
 int internal_fg(char **args)
 {
     // Implementar lógica para llevar un trabajo a primer plano
-    printf(GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
@@ -239,7 +249,9 @@ int internal_fg(char **args)
 int internal_bg(char **args)
 {
     // Implementar lógica para llevar un trabajo a segundo plano
-    printf(GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
@@ -379,10 +391,10 @@ int parse_args(char **args, char *line)
     args[i] = NULL; // Último elemento debe ser NULL
 
     // [PRUEBA, QUITAR LUEGO]: imprimir los tokens obtenidos ----------------------------------------------------QUITAR
-    for (int j = 0; args[j] != NULL; j++)
-    {
-        printf("args[%d]: %s\n", j, args[j]);
-    }
+    #if DEBUGN1
+        for (int j = 0; args[j] != NULL; j++)
+        { fprintf(stderr,GRIS_T "[parse_args()-> token %d: %s]\n"RESET, j, args[j]); }
+    #endif
 
     // Devolvemos núm de tokens !NULL (el contador i)
     return i;
@@ -399,12 +411,16 @@ int execute_line(char *line) {
     jobs_list[0].estado = 'E';
     parse_args(args, line);
     if (!check_internal(args)) {
-        fprintf(stderr, GRIS_T "[execute_line()→ PID padre: %d (./nivel3)]\n", getppid());
-        printf(RESET);
+        #if DEBUGN3
+            fprintf(stderr, GRIS_T "[execute_line()→ PID padre: %d (./nivel3)]\n", getppid());
+            printf(RESET);
+        #endif
         pid = fork();
         if (pid == 0) {//hijo
-            fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d (%s)]\n", getpid(), jobs_list[0].cmd);
-            printf(RESET);
+            #if DEBUGN3
+                fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d (%s)]\n", getpid(), jobs_list[0].cmd);
+                printf(RESET);
+            #endif
             execvp(args[0], args);
             fprintf(stderr, ROJO_T "%s: no se encontró la orden\n", line);
             printf(RESET);
@@ -412,8 +428,10 @@ int execute_line(char *line) {
         else if (pid > 0) {//padre
             wait(&status);
             if (WIFEXITED(status)) {
-                fprintf(stderr, GRIS_T "[execute_line()→ Proceso hijo %d finalizado con exit(), estado: %d]\n", pid, WEXITSTATUS(status));
-                printf(RESET);
+                #if DEBUGN3
+                    fprintf(stderr, GRIS_T "[execute_line()→ Proceso hijo %d finalizado con exit(), estado: %d]\n", pid, WEXITSTATUS(status));
+                    printf(RESET);
+                #endif
                 //Resetear datos
                 jobs_list[0].pid = 0;
                 jobs_list[0].estado = 'N';
@@ -421,8 +439,10 @@ int execute_line(char *line) {
             }
             else {
                 if (WIFSIGNALED(status)) {
-                    fprintf(stderr, ROJO_T "[execute_line()→ Proceso hijo %d finalizado por señal %d]\n", pid, WTERMSIG(status));
-                    printf(RESET);
+                    #if DEBUGN3
+                        fprintf(stderr, ROJO_T "[execute_line()→ Proceso hijo %d finalizado por señal %d]\n", pid, WTERMSIG(status));
+                        printf(RESET);
+                    #endif
                     jobs_list[0].pid = 0;
                     jobs_list[0].estado = 'N';
                     memset(jobs_list[0].cmd, '\0', COMMAND_LINE_SIZE);
