@@ -1,13 +1,7 @@
 /* NIVEL 5 */
 #include "nivel5.h"
+/* BUG ENCONTRADO EN EL CD: NO CAMBIA EL DIRECTORIO EN EL PROMPT */
 
-/* PEQUEÑO BUG VISTO/SOLUCIONADO:
-    - si un comando se ejecuta con '&' y este acaba, el minishell también acaba (p.ej sleep 10 &, chromium & [sup. que chromium está instalado])
-        tiene algo que ver con el fgets del read_line() devolviendo NULL ("fgets: Interrupted system call")
-        * con chromium también sucede el error "fgets: Interrupted system call" si se hace ctrl+z
-
-    Tiene algo que ver con los signals ==> solución del Copilot: meter while(1), borrar error y volver a ejecutar los ifelse
-*/
 
 /* ---------------------- */
 /* METODO MAIN */
@@ -103,9 +97,11 @@ int internal_cd(char **args) {
     }
 
     // <<En este nivel, a modo de test, muestra por pantalla el directorio al que nos hemos trasladado.>>
-    char *cwd = getcwd(NULL, 0);
-    printf("Directorio actual: %s\n", cwd);
-    free(cwd);
+    #if DEBUGN2
+        char *cwd = getcwd(NULL, 0);
+        printf("Directorio actual: %s\n", cwd);
+        free(cwd);
+    #endif
 
     return 1;
 }
@@ -135,19 +131,21 @@ int internal_export(char **args) {
     }
 
     // TEMPORALMENTE imprimir tokens obtenidos
-    printf("PARÁMETRO NOMBRE: %s\n", nombre);
-    printf("PARÁMETRO VALOR: %s\n", valor);
+    #if DEBUGN2
+        printf("PARÁMETRO NOMBRE: %s\n", nombre);
+        printf("PARÁMETRO VALOR: %s\n", valor);
 
-    // TEMPORALMENTE: Mostrar valor inicial
-    char *valInicial = getenv(nombre);
-    if (valInicial != NULL)
-    {
-        printf("Valor inicial de %s: %s\n", nombre, valInicial);
-    }
-    else
-    {
-        printf("Valor inicial de %s es nulo / no existe \n", nombre);
-    }
+        // TEMPORALMENTE: Mostrar valor inicial
+        char *valInicial = getenv(nombre);
+        if (valInicial != NULL)
+        {
+            printf("Valor inicial de %s: %s\n", nombre, valInicial);
+        }
+        else
+        {
+            printf("Valor inicial de %s es nulo / no existe \n", nombre);
+        }
+    #endif
 
     // ASIGNAR variable con setenv()
     if (setenv(nombre, valor, 1) != 0)
@@ -156,17 +154,19 @@ int internal_export(char **args) {
         return 0;
     }
 
-    // TEMPORALMENTE comprobar el nuevo valor de la variable
-    char *pruebaNuevo = getenv(nombre);
-    if (pruebaNuevo != NULL)
-    {
-        printf("Nuevo valor para %s: %s\n", nombre, pruebaNuevo);
-    }
-    else
-    {
-        perror("getenv");
-        return 0;
-    }
+    #if DEBUGN2
+        // TEMPORALMENTE comprobar el nuevo valor de la variable
+        char *pruebaNuevo = getenv(nombre);
+        if (pruebaNuevo != NULL)
+        {
+            printf("Nuevo valor para %s: %s\n", nombre, pruebaNuevo);
+        }
+        else
+        {
+            perror("getenv");
+            return 0;
+        }
+    #endif
 
     return 1;
 }
@@ -245,7 +245,9 @@ int internal_jobs(char **args)
 int internal_fg(char **args)
 {
     // Implementar lógica para llevar un trabajo a primer plano
-    printf(GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
@@ -254,7 +256,9 @@ int internal_fg(char **args)
 int internal_bg(char **args)
 {
     // Implementar lógica para llevar un trabajo a segundo plano
-    printf(GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n");
+    #if DEBUGN1
+        fprintf(stderr,GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n"RESET);
+    #endif
     return 1; // TRUE
 }
 
@@ -311,9 +315,6 @@ int check_internal(char **args) {
 /* ---------------------- */
 /* READ LINE */
 char *read_line(char *line) {
-    //signal(SIGINT, SIG_IGN);
-    //signal(SIGTSTP, SIG_IGN);
-
     // Forzar el vaciado del buffer de salida
     fflush(stdout);
 
@@ -322,7 +323,6 @@ char *read_line(char *line) {
 
     imprimir_prompt();
     // Lee la línea y comprueba si no es nula
-    //printf("Before fgets: %s\n", line); //DEBUG
     while (1) { //solución del Copilot
         if (fgets(line, COMMAND_LINE_SIZE, stdin) != NULL)
         {
@@ -341,17 +341,15 @@ char *read_line(char *line) {
             exit(0);
         }
 
-        //solución del Copilot
         else if (errno == EINTR) {
-            // fgets was interrupted by a signal, try again
+            // fgets interrumpido por una señal repetimos bucle while
             clearerr(stdin);
             continue;
         }
         
         else
         { // línea nula
-            perror("fgets"); //DEBUG
-        //    printf("After fgets: %s\n", line); //DEBUG
+            perror("fgets"); 
             return NULL;
         }
 
@@ -426,15 +424,17 @@ int execute_line(char *line) {
             signal(SIGINT, SIG_IGN);
             signal(SIGSTOP, SIG_IGN);
 
-            fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d(%s)]\n" RESET, getpid(), jobs_list[0].cmd);
+            #if DEBUGN3
+                fprintf(stderr, GRIS_T "[execute_line()→ PID hijo: %d(%s)]\n" RESET, getpid(), jobs_list[0].cmd);
+            #endif
             execvp(args[0], args);
             fprintf(stderr, ROJO_T "%s: no se encontró la orden\n" RESET, line);
             exit(-1);
         }
         else if (pid > 0) {//PADRE
-            
-            fprintf(stderr, GRIS_T "[execute_line()→ PID Padre %d(%s)]\n" RESET, getpid(), mi_shell);
-
+            #if DEBUGN3
+                fprintf(stderr, GRIS_T "[execute_line()→ PID Padre %d(%s)]\n" RESET, getpid(), mi_shell);
+            #endif
             if (bkgd == 1) {
                 jobs_list_add(pid, 'E', comandos);
 
@@ -493,14 +493,18 @@ void reaper(int signum) {
         }
 
         if (WIFEXITED(estado)) {
-            char mensaje[1200];
-            sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d(%s) finalizado con exit code %d]\n" RESET, ended, jobs_list[0].cmd, WEXITSTATUS(estado));
-            write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
+            #if DEBUGN4
+                char mensaje[1200];
+                sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d(%s) finalizado con exit code %d]\n" RESET, ended, jobs_list[0].cmd, WEXITSTATUS(estado));
+                write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
+            #endif
 
         } else if (WIFSIGNALED(estado)) {
-            char mensaje[1200];
-            sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d(%s) finalizado con exit code %d]\n" RESET, ended, jobs_list[0].cmd, WTERMSIG(estado));
-            write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
+            #if DEBUGN4
+                char mensaje[1200];
+                sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d(%s) finalizado con exit code %d]\n" RESET, ended, jobs_list[0].cmd, WTERMSIG(estado));
+                write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
+            #endif
         }
     }
 }
@@ -519,28 +523,34 @@ void ctrlc(int signum) {
 
         //Miramos si es nuestro shell
         if (strcmp(jobs_list[0].cmd, mi_shell)) {
-            fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d (%s)]\n" RESET,
-                getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
+            #if DEBUGN4
+                fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d (%s)]\n" RESET,
+                    getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
 
-            printf(GRIS_T "[ctrlc()→ Señal %d enviada a %d(%s) por %d(%s)]" RESET, 
-                SIGTERM, jobs_list[0].pid, jobs_list[0].cmd, getpid(), mi_shell);
+                fprintf(stderr,GRIS_T "[ctrlc()→ Señal %d enviada a %d(%s) por %d(%s)]" RESET, 
+                    SIGTERM, jobs_list[0].pid, jobs_list[0].cmd, getpid(), mi_shell);
+            #endif
 
             kill(jobs_list[0].pid, SIGTERM);
 
         } else {
-            fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
-                getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
+            #if DEBUGN4
+                fprintf(stderr, GRIS_T "[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
+                    getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
 
-            fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s) debido a que su proceso en foreground es el shell]\n" RESET,
-                SIGTERM, getpid(), mi_shell);
+                fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s) debido a que su proceso en foreground es el shell]\n" RESET,
+                    SIGTERM, getpid(), mi_shell);
+            #endif
         }
 
     } else {
-        fprintf(stderr, GRIS_T "\n[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
-            getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
+        #if DEBUGN4
+            fprintf(stderr, GRIS_T "\n[ctrlc()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
+                getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
 
-        fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s)] debido a que no hay proceso en foreground]\n" RESET,
-            SIGTERM, getpid(), mi_shell);
+            fprintf(stderr, GRIS_T "[ctrlc()→ Señal %d no enviada por %d(%s)] debido a que no hay proceso en foreground]\n" RESET,
+                SIGTERM, getpid(), mi_shell);
+        #endif
     }
 
     printf("\n");
@@ -560,11 +570,13 @@ void ctrlz(int signum) {
 
             kill(jobs_list[0].pid, SIGSTOP);
 
-            fprintf(stderr, GRIS_T "[ctrlz()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d (%s)]\n" RESET,
-                getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
+            #if DEBUGN5
+                fprintf(stderr, GRIS_T "[ctrlz()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d (%s)]\n" RESET,
+                    getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
 
-            printf(GRIS_T "[ctrlz()→ Señal %d enviada a %d(%s) por %d(%s)]" RESET, 
-                SIGSTOP, jobs_list[0].pid, jobs_list[0].cmd, getpid(), mi_shell);
+                fprintf(stderr,GRIS_T "[ctrlz()→ Señal %d enviada a %d(%s) por %d(%s)]" RESET, 
+                    SIGSTOP, jobs_list[0].pid, jobs_list[0].cmd, getpid(), mi_shell);
+            #endif
 
             jobs_list[0].estado = 'D';
             jobs_list_add(jobs_list[0].pid, jobs_list[0].estado, jobs_list[0].cmd);
@@ -576,19 +588,23 @@ void ctrlz(int signum) {
             
 
         } else {
-            fprintf(stderr, GRIS_T "[ctrlz()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
-                getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
+            #if DEBUGN5
+                fprintf(stderr, GRIS_T "[ctrlz()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
+                    getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
 
-            fprintf(stderr, GRIS_T "[ctrlz()→ Señal %d no enviada por %d(%s) debido a que su proceso en foreground es el shell]\n" RESET,
-                SIGTSTP, getpid(), mi_shell);
+                fprintf(stderr, GRIS_T "[ctrlz()→ Señal %d no enviada por %d(%s) debido a que su proceso en foreground es el shell]\n" RESET,
+                    SIGTSTP, getpid(), mi_shell);
+            #endif
         }
 
     } else {
-        fprintf(stderr, GRIS_T "\n[ctrlz()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
-            getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
+        #if DEBUGN5
+            fprintf(stderr, GRIS_T "\n[ctrlz()→ Soy el proceso con PID %d(%s), el proceso en foreground es %d(%s)]\n" RESET,
+                getpid(), mi_shell, jobs_list[0].pid, jobs_list[0].cmd);
 
-        fprintf(stderr, GRIS_T "[ctrlz()→ Señal %d no enviada por %d(%s)] debido a que no hay proceso en foreground]\n" RESET,
-            SIGTSTP, getpid(), mi_shell);
+            fprintf(stderr, GRIS_T "[ctrlz()→ Señal %d no enviada por %d(%s)] debido a que no hay proceso en foreground]\n" RESET,
+                SIGTSTP, getpid(), mi_shell);
+        #endif
     }
 }
 
@@ -620,7 +636,7 @@ int jobs_list_add(pid_t pid, char estado, char *cmd) {
         return n_job;
 
     } else {
-        fprintf(stderr, ROJO_T "Límite de procesos en jobs_list alcanzado\n");
+        fprintf(stderr, ROJO_T "Límite de procesos en jobs_list alcanzado\n"RESET);
         return -1;
     }
 }
