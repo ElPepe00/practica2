@@ -98,8 +98,8 @@ int internal_cd(char **args) {
 
     // <<En este nivel, a modo de test, muestra por pantalla el directorio al que nos hemos trasladado.>>
     #if DEBUGN2
-        char *cwd = getcwd(NULL, 0);
-        printf("Directorio actual: %s\n", cwd);
+        char *cwd = getcwd(NULL, 0);   
+        fprintf(stderr,GRIS_T"Directorio actual: %s\n"RESET, cwd);
         free(cwd);
     #endif
 

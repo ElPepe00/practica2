@@ -94,10 +94,11 @@ int internal_cd(char **args) {
         }
     }
 
-    // <<En este nivel, a modo de test, muestra por pantalla el directorio al que nos hemos trasladado.>>
-    char *cwd = getcwd(NULL, 0);
-    printf("Directorio actual: %s\n", cwd);
-    free(cwd);
+    #if DEBUGN2
+        char *cwd = getcwd(NULL, 0);   
+        fprintf(stderr,GRIS_T"Directorio actual: %s\n"RESET, cwd);
+        free(cwd);
+    #endif
 
     return 1;
 }
@@ -423,7 +424,7 @@ int imprimir_prompt()
     
     printf(NEGRITA ROJO_T "%s", getenv("USER"));
     printf(RESET ":");
-    printf(NEGRITA AZUL_T "~%s", getenv("PWD"));
+    printf(NEGRITA AZUL_T "~%s", /*getenv("PWD")*/getcwd(NULL, 0));
     printf(RESET VERDE_T "%c " RESET, PROMPT); // printf("$ ")
     return 0;
 
