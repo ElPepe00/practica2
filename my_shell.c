@@ -1,5 +1,11 @@
-/* NIVEL 6 */
-#include "nivel6.h"
+/* MY SHELL */
+/*
+AUTORES:
+    Antoni Jaume
+    Josep Oliver
+    Gabriel Riutort
+*/
+#include "my_shell.h"
 
 /* ---------------------- */
 /* METODO MAIN */
@@ -201,26 +207,6 @@ int internal_source(char **args) {
     }
 
     return 1;
-/*
-    if (!args[1]){
-        fprintf(stderr, ROJO_T "Error de sintaxis. Uso: source <nombre_fichero>\n");
-        return -1;
-    }
-    FILE *fichero;
-    fichero =fopen(args[1], "r");
-    if(fichero){
-        fprintf(stderr, ROJO_T "Error %d: %s\n", errno, strerror(errno));
-        return -1;
-    }
-    
-    while (fgets(str, 100, fichero)){
-        puts(str);
-        fflush(fichero);
-    }
-    fclose(fichero);
-  return 0;
-    return 1; // TRUE
-*/
 }
 
 /* ---------------------- */

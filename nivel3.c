@@ -353,11 +353,14 @@ char *read_line(char *line) {
 /* IMPRIMIR PROMPT */
 int imprimir_prompt()
 {
+    
     printf(NEGRITA ROJO_T "%s", getenv("USER"));
     printf(RESET ":");
-    printf(NEGRITA AZUL_T "~%s", getenv("PWD"));
-    printf(RESET "%c ", PROMPT); // printf("$ ")
+    printf(NEGRITA AZUL_T "~%s", /*getenv("PWD")*/getcwd(NULL, 0));
+    printf(RESET VERDE_T "%c " RESET, PROMPT); // printf("$ ")
     return 0;
+
+    fflush(stdout);
 }
 
 /* ---------------------- */

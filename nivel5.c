@@ -363,7 +363,7 @@ int imprimir_prompt()
     
     printf(NEGRITA ROJO_T "%s", getenv("USER"));
     printf(RESET ":");
-    printf(NEGRITA AZUL_T "~%s", getenv("PWD"));
+    printf(NEGRITA AZUL_T "~%s", /*getenv("PWD")*/getcwd(NULL, 0));
     printf(RESET VERDE_T "%c " RESET, PROMPT); // printf("$ ")
     return 0;
 
