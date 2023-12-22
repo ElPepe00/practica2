@@ -1,7 +1,10 @@
 /* NIVEL 5 */
 #include "nivel5.h"
-/* BUG ENCONTRADO EN EL CD: NO CAMBIA EL DIRECTORIO EN EL PROMPT */
-
+/*AUTORES:
+    Antoni Jaume Lemesev
+    Josep Oliver Vallespir
+    Gabriel Riutort Álvarez
+*/
 
 /* ---------------------- */
 /* METODO MAIN */
@@ -484,6 +487,7 @@ void reaper(int signum) {
     int estado;
 
     while ((ended = waitpid(-1, &estado, WNOHANG)) > 0) {
+        int pos = jobs_list_find(ended);
 
         if (ended == jobs_list[0].pid) {
             //Reseteamos pid
@@ -506,6 +510,12 @@ void reaper(int signum) {
                 write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
             #endif
         }
+
+        if (pos != -1) {
+            // Imprimir a salida estándar
+            printf("Terminado PID %d (%s) en jobs_list[%d] con status %d\n", ended, jobs_list[pos].cmd, pos, WTERMSIG(estado));
+        }
+
     }
 }
 

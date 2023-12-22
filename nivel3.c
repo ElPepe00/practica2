@@ -1,5 +1,10 @@
 /* NIVEL 3 */
 #include "nivel3.h"
+/*AUTORES:
+    Antoni Jaume Lemesev
+    Josep Oliver Vallespir
+    Gabriel Riutort Álvarez
+*/
 
 /* --- COMANDOS INTERNOS --- */
 

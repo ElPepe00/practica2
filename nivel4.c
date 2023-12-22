@@ -1,5 +1,10 @@
 /* NIVEL 4 */
 #include "nivel4.h"
+/*AUTORES:
+    Antoni Jaume Lemesev
+    Josep Oliver Vallespir
+    Gabriel Riutort Álvarez
+*/
 
 /* ---------------------- */
 /* METODO MAIN */
@@ -249,7 +254,7 @@ int internal_jobs(char **args)
 {
     // Implementar lógica para mostrar trabajos en segundo plano
     #if DEBUGN1
-        fprintf(stderr,GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n",RESET);
+        fprintf(stderr,GRIS_T "[internal_jobs()→Esta función mostrará el PID de los procesos que no estén en foreground]\n"RESET);
     #endif
     return 1; // TRUE
 }
@@ -260,7 +265,7 @@ int internal_fg(char **args)
 {
     // Implementar lógica para llevar un trabajo a primer plano
     #if DEBUGN1
-        fprintf(stderr,GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n",RESET);
+        fprintf(stderr,GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n"RESET);
     #endif
     return 1; // TRUE
 }
@@ -271,7 +276,7 @@ int internal_bg(char **args)
 {
     // Implementar lógica para llevar un trabajo a segundo plano
     #if DEBUGN1
-        fprintf(stderr,GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n",RESET);
+        fprintf(stderr,GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n"RESET);
     #endif
     return 1; // TRUE
 }

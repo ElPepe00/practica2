@@ -1,4 +1,10 @@
 /* NIVEL 1 */
+/*
+AUTORES:
+    Antoni Jaume Lemesev
+    Josep Oliver Vallespir
+    Gabriel Riutort Álvarez
+*/
 #include "nivel1.h"
 
 //Método main
@@ -52,46 +58,41 @@ int imprimir_prompt()
     fflush(stdout);
 }
 
-int parse_args(char **args, char *line){
+int parse_args(char **args, char *line)
+{
     char *token;
     int i = 0;
 
     token = strtok(line, " ");
-    while (token != NULL) {
-        if (i >= ARGS_SIZE) {
+    while (token != NULL)
+    {
+        if (i >= ARGS_SIZE || token[0] == '#')
+        {
             // Esto se ejeucta si: comentario o núm max de argumentos
-            args[i] = NULL;
-            break;
-        }
-
-        if (token[0] == "#") {
             args[i] = NULL;
             break;
         }
 
         // Asignar suficiente memoria a args[i]
         args[i] = (char *)malloc(strlen(token) + 1);
-        
+
         // Copiar el token a args[i]
         strcpy(args[i], token);
 
-        //NULL porque en realidad estamos iterando sobre el propio token
-        token = strtok(NULL, " "); 
+        // NULL porque en realidad estamos iterando sobre el propio token
+        token = strtok(NULL, " ");
         i++;
     }
 
     args[i] = NULL; // Último elemento debe ser NULL
 
-    // [PRUEBA, QUITAR EN NIVELES POSTERIORES]: imprimir los tokens obtenidos
+    // [PRUEBA, QUITAR LUEGO]: imprimir los tokens obtenidos
     #if DEBUGN1
         for (int j = 0; args[j] != NULL; j++)
         { fprintf(stderr,GRIS_T "[parse_args()-> token %d: %s]\n"RESET, j, args[j]); }
     #endif
 
-    
-    
-
-    //Devolvemos núm de tokens !NULL (el contador i)
+    // Devolvemos núm de tokens !NULL (el contador i)
     return i;
 }
 

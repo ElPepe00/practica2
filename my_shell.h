@@ -21,12 +21,12 @@
 #define N_JOBS 64
 
 //Debug?
-#define DEBUGN1 1
-#define DEBUGN2 1
-#define DEBUGN3 1
-#define DEBUGN4 1
-#define DEBUGN5 1
-#define DEBUGN6 1
+#define DEBUGN1 0
+#define DEBUGN2 0
+#define DEBUGN3 0
+#define DEBUGN4 0
+#define DEBUGN5 0
+#define DEBUGN6 0
 
 //Colores y estilos
 #define RESET "\033[0m"

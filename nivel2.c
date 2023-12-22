@@ -1,4 +1,9 @@
 /* NIVEL 2 */
+/*AUTORES:
+    Antoni Jaume Lemesev
+    Josep Oliver Vallespir
+    Gabriel Riutort Álvarez
+*/
 #include "nivel2.h"
 
 /* --- COMANDOS INTERNOS --- */
