@@ -226,7 +226,7 @@ int internal_source(char **args) {
 /* INTERNAL JOBS */
 int internal_jobs(char **args)
 {
-    for (int i = 0; i <= n_job; i++) {
+    for (int i = 1; i <= n_job; i++) {
         printf("[%d] %d\t%c\t%s\n", i, jobs_list[i].pid, jobs_list[i].estado, jobs_list[i].cmd);
     }
     return 0;
@@ -236,10 +236,6 @@ int internal_jobs(char **args)
 /* INTERNAL FG */
 int internal_fg(char **args)
 {
-    // Implementar lógica para llevar un trabajo a primer plano
-    /*printf(GRIS_T "[internal_fg()→Esta función pone en primer plano una que esta ejecutandose en segundo plano]\n");
-    return 1; // TRUE*/
-
     //1. COMPROBAR QUE SEA UN NÚMERO
     if (args[1] == NULL)
     {
@@ -267,9 +263,10 @@ int internal_fg(char **args)
 
     //4. Copiar los datos de jobs_list[pos] a jobs_list[0], habiendo eliminado previamente del cmd el ' &' (en caso de que lo tuviera), y poniendo el estado a 'E'.
     borrarCaracter(jobs_list[pos].cmd, '&');
-    jobs_list[0].pid = jobs_list[pos].pid;
-    jobs_list[0].estado = 'E';
-    strcpy(jobs_list[0].cmd, jobs_list[pos].cmd);
+    jobs_list[pos].estado = 'E';
+    struct info_job temp;
+    temp = jobs_list[pos];
+    jobs_list[0] = temp;
     
     //5.Eliminar jobs_list[pos] utilizando la función jobs_list_remove().
     jobs_list_remove(pos);
@@ -559,6 +556,7 @@ void reaper(int signum) {
     int estado;
 
     while ((ended = waitpid(-1, &estado, WNOHANG)) > 0) {
+        int pos = jobs_list_find(ended);
 
         if (ended == jobs_list[0].pid) {
             //Reseteamos pid
@@ -571,11 +569,15 @@ void reaper(int signum) {
             char mensaje[1200];
             sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d(%s) finalizado con exit code %d]\n" RESET, ended, jobs_list[0].cmd, WEXITSTATUS(estado));
             write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
-
         } else if (WIFSIGNALED(estado)) {
             char mensaje[1200];
             sprintf(mensaje, GRIS_T "[reaper()→ Proceso hijo %d(%s) finalizado con exit code %d]\n" RESET, ended, jobs_list[0].cmd, WTERMSIG(estado));
             write(2, mensaje, strlen(mensaje)); //2 es el flujo stderr
+        }
+
+        if (pos != -1) {
+            // Imprimir a salida estándar
+            printf("Terminado PID %d (%s) en jobs_list[%d] con status %d\n", ended, jobs_list[pos].cmd, pos, WTERMSIG(estado));
         }
     }
 }
@@ -713,30 +715,31 @@ int jobs_list_add(pid_t pid, char estado, char *cmd) {
 /* ---------------------- */
 /* JOBS_LIST_FIND */
 int jobs_list_find(pid_t pid) {
-
     int i = 1;
     while (i < N_JOBS) {
-        if (jobs_list[0].pid == pid) {
+        if (jobs_list[i].pid == pid) {
             return i;
         }
         i++;
     }
+    return -1; // Si no se encuentra el PID, devuelve -1
 }
 
 /* ---------------------- */
 /* JOBS_LIST_REMOVE */
 int jobs_list_remove(int pos) {
+    if (pos >= 0 && pos < n_job) {
+        // Mover todos hacia la izquierda
+        for (int i = pos; i < n_job; i++) {
+            jobs_list[i] = jobs_list[i + 1];
+        }
 
-    if (pos > 0 && pos < n_job) {
         n_job--;
-        jobs_list[pos].pid = jobs_list[n_job].pid;
-        jobs_list[pos].estado = jobs_list[n_job].estado;
-        strcpy(jobs_list[pos].cmd, jobs_list[n_job].cmd);
 
+        return 0;
     } else {
         return -1;
     }
-    return 0;
 }
 
 
