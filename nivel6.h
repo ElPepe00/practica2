@@ -45,6 +45,7 @@ int internal_source(char **args);
 int internal_jobs(char **args);
 
 void borrarCaracter(char *args, char caracter);
+void quitarCaracteresFinal(char *args, char *caracteres);
 void reaper(int signum);
 void ctrlc(int signum);
 void ctrlz(int signum);

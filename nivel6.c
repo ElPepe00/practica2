@@ -262,7 +262,8 @@ int internal_fg(char **args)
     }
 
     //4. Copiar los datos de jobs_list[pos] a jobs_list[0], habiendo eliminado previamente del cmd el ' &' (en caso de que lo tuviera), y poniendo el estado a 'E'.
-    borrarCaracter(jobs_list[pos].cmd, '&');
+    //borrarCaracter(jobs_list[pos].cmd, '&');
+    quitarCaracteresFinal(jobs_list[pos].cmd, " &");
     jobs_list[pos].estado = 'E';
     struct info_job temp;
     temp = jobs_list[pos];
@@ -285,10 +286,6 @@ int internal_fg(char **args)
 /* INTERNAL BG */
 int internal_bg(char **args)
 {
-    // Implementar lógica para llevar un trabajo a segundo plano
-    //printf(GRIS_T "[internal_bg)→Esta función reanuda el proceso que esta en segundo plano]\n");
-    //return 1; // TRUE
-
     //1. COMPROBAR QUE SEA UN NÚMERO
     if (args[1] == NULL)
     {
@@ -323,7 +320,7 @@ int internal_bg(char **args)
     printf(GRIS_T "[internal_bg()→Señal SIGCONT enviada a %d(%s)]\n" RESET, jobs_list[pos].pid, jobs_list[pos].cmd);
 
     //6. Mostrar por pantalla el nº de trabajo, el PID, el estado y el cmd &, al igual que hacíamos cuando se generaba un comando en 2º plano.
-    printf("[%d] %d\t%c\t%s &\n", pos, jobs_list[pos].pid, jobs_list[pos].estado, jobs_list[pos].cmd);
+    printf("[%d] %d\t%c\t%s\n", pos, jobs_list[pos].pid, jobs_list[pos].estado, jobs_list[pos].cmd);
 }
 
 /* --- --- --- --- --- ---*/
@@ -544,6 +541,19 @@ void borrarCaracter(char *args, char caracter) {
     args[iNew] = 0;
 }
 
+//Métood para borrar carácteres al final de la cadena de args
+void quitarCaracteresFinal(char *args, char *caracteres) {
+    size_t longitudCadena = strlen(args);
+    size_t longitudCaracteres = strlen(caracteres);
+
+    if (longitudCadena >= longitudCaracteres) { //Comprobación 1
+        if (strcmp(args + longitudCadena - longitudCaracteres, caracteres) == 0) { //Comprobación 2
+            // Eliminar caracteres del final de la cadena
+            args[longitudCadena - longitudCaracteres] = '\0';
+        }
+    }
+}
+
 
 /* ---------------------- */
 /* REAPER */
@@ -748,9 +758,8 @@ int jobs_list_remove(int pos) {
 int is_output_redirection (char **args){
     /*Función booleana que recorrerá la lista de argumentos buscando un token ‘>’, seguido de otro token que será un nombre de fichero. En tal caso el valor de retorno será TRUE (1), significando que se trata de un redireccionamiento, y substituirá el argumento ‘>’ por NULL (recordemos que así lo requiere execvp()). En caso contrario, el valor de retorno será FALSE (0) y no modificará los argumentos.
     Si se trata de un redireccionamiento (con la sintaxis correcta), se abrirá con open() el fichero de salida que se ha indicado en el comando, para obtener su descriptor de fichero fd.
-    Mediante la llamada al sistema dup() o dup2(fd, 1) lo que sucede es que el descriptor 1, que es el correspondiente a la salida estándard stdout, ahora se referirá al fichero descrito con el fd obtenido al hacer el open(). A partir de ese momento, el resultado de la ejecución de un comando cuyo destino fuera la pantalla, así como cualquier printf(...), cualquier fprintf(stdout, ...), o cualquier write(1, ...), escribirá el contenido en ese fichero en vez de por la pantalla. 
+    Mediante la llamada al dup2(fd, 1) lo que sucede es que el descriptor 1, que es el correspondiente a la salida estándard stdout, ahora se referirá al fichero descrito con el fd obtenido al hacer el open(). A partir de ese momento, el resultado de la ejecución de un comando cuyo destino fuera la pantalla, así como cualquier printf(...), cualquier fprintf(stdout, ...), o cualquier write(1, ...), escribirá el contenido en ese fichero en vez de por la pantalla. 
     Una vez hecha la asociación de los descriptores, liberamos al sistema el descriptor del fichero con un close(fd).
-    Hay que gestionar los posibles errores en las llamadas al sistema.
     */
     int i = 0;
     int fd;
@@ -758,6 +767,7 @@ int is_output_redirection (char **args){
         if (strcmp(args[i], ">") == 0) {
             args[i] = NULL;
             fd = open(args[i+1], O_WRONLY | O_CREAT | O_TRUNC, 0666);
+            //Gestión de errores
             if (fd == -1) {
                 perror("open");
                 return 0;
